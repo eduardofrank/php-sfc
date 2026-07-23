@@ -1,5 +1,10 @@
 # Saved / shareable quote records (runtime user data)
 /data/quotes/*.json
 
+# Admin password hash (secret, machine-specific)
+/data/config/admin-password.php
+
+# Price config (data/config/options.json) IS tracked on purpose.
+
 # OS noise
 .DS_Store

@@ -1,0 +1,258 @@
+{
+    "sfc_price_tables": {
+        "coated_115_150": {
+            "label_key": "table_coated_115_150",
+            "print_modes": [
+                "4x0",
+                "4x4"
+            ],
+            "prices": {
+                "4x0": {
+                    "1_10": 2.7,
+                    "11_25": 2.63,
+                    "26_50": 2.59,
+                    "51_100": 2.56,
+                    "101_200": 2.49,
+                    "201_300": 2.45,
+                    "301_plus": 2.45
+                },
+                "4x4": {
+                    "1_10": 3.26,
+                    "11_25": 3.15,
+                    "26_50": 3.05,
+                    "51_100": 2.98,
+                    "101_200": 2.91,
+                    "201_300": 2.84,
+                    "301_plus": 2.84
+                }
+            }
+        },
+        "coated_200_300": {
+            "label_key": "table_coated_200_300",
+            "print_modes": [
+                "4x0",
+                "4x4"
+            ],
+            "prices": {
+                "4x0": {
+                    "1_10": 2.91,
+                    "11_25": 2.84,
+                    "26_50": 2.77,
+                    "51_100": 2.7,
+                    "101_200": 2.63,
+                    "201_300": 2.59,
+                    "301_plus": 2.59
+                },
+                "4x4": {
+                    "1_10": 3.36,
+                    "11_25": 3.29,
+                    "26_50": 3.19,
+                    "51_100": 3.12,
+                    "101_200": 3.05,
+                    "201_300": 2.99,
+                    "301_plus": 2.99
+                }
+            }
+        },
+        "lithosticker": {
+            "label_key": "table_lithosticker",
+            "print_modes": [
+                "4x0"
+            ],
+            "prices": {
+                "4x0": {
+                    "1_10": 2.7,
+                    "11_25": 2.63,
+                    "26_50": 2.59,
+                    "51_100": 2.56,
+                    "101_200": 2.49,
+                    "201_300": 2.45,
+                    "301_plus": 2.45
+                }
+            }
+        },
+        "vinyl": {
+            "label_key": "table_vinyl",
+            "print_modes": [
+                "4x0"
+            ],
+            "prices": {
+                "4x0": {
+                    "1_10": 3.55,
+                    "11_25": 3.27,
+                    "26_50": 3.24,
+                    "51_100": 3.2,
+                    "101_200": 3.14,
+                    "201_300": 3.11,
+                    "301_plus": 3.11
+                }
+            }
+        },
+        "lamination": {
+            "label_key": "table_lamination",
+            "print_modes": [
+                "per_side"
+            ],
+            "prices": {
+                "per_side": {
+                    "1_10": 0.25,
+                    "11_25": 0.25,
+                    "26_50": 0.25,
+                    "51_100": 0.25,
+                    "101_200": 0.25,
+                    "201_300": 0.25,
+                    "301_plus": 0.25
+                }
+            }
+        },
+        "hardcover_binding": {
+            "label_key": "table_hardcover_binding",
+            "print_modes": [
+                "per_unit"
+            ],
+            "prices": {
+                "per_unit": {
+                    "1_10": 25,
+                    "11_25": 25,
+                    "26_50": 25,
+                    "51_100": 25,
+                    "101_200": 25,
+                    "201_300": 25,
+                    "301_plus": 25
+                }
+            }
+        }
+    },
+    "sfc_quantity_tiers": [
+        {
+            "key": "1_10",
+            "min": 1,
+            "max": 10
+        },
+        {
+            "key": "11_25",
+            "min": 11,
+            "max": 25
+        },
+        {
+            "key": "26_50",
+            "min": 26,
+            "max": 50
+        },
+        {
+            "key": "51_100",
+            "min": 51,
+            "max": 100
+        },
+        {
+            "key": "101_200",
+            "min": 101,
+            "max": 200
+        },
+        {
+            "key": "201_300",
+            "min": 201,
+            "max": 300
+        },
+        {
+            "key": "301_plus",
+            "min": 301,
+            "max": null
+        }
+    ],
+    "sfc_sheet_specs": {
+        "cutWidthMm": 475,
+        "cutHeightMm": 320,
+        "printableWidthMm": 450,
+        "printableHeightMm": 310
+    },
+    "sfc_sheet_imposition_gap_mm": 4,
+    "sfc_job_service_rates": {
+        "cutting": {
+            "label_key": "service_cutting",
+            "percent": 0
+        },
+        "creasing": {
+            "label_key": "service_creasing",
+            "percent": 0
+        },
+        "stapling": {
+            "label_key": "service_stapling",
+            "percent": 0
+        }
+    },
+    "sfc_die_cut_rates": {
+        "up_to_50": {
+            "label_key": "die_cut_tier_up_to_50",
+            "min_sheets": 1,
+            "max_sheets": 50,
+            "percent": 25
+        },
+        "up_to_100": {
+            "label_key": "die_cut_tier_up_to_100",
+            "min_sheets": 51,
+            "max_sheets": 100,
+            "percent": 20
+        },
+        "above_100": {
+            "label_key": "die_cut_tier_above_100",
+            "min_sheets": 101,
+            "max_sheets": null,
+            "percent": 15
+        }
+    },
+    "sfc_turnaround_rates": {
+        "same_day": {
+            "label_key": "turnaround_same_day",
+            "percent": 20
+        }
+    },
+    "sfc_paper_catalog": {
+        "coated": {
+            "label_key": "paper_coated",
+            "duplex": true,
+            "surfaces": [
+                "matte",
+                "glossy"
+            ],
+            "weight_groups": [
+                {
+                    "gsm": [
+                        115,
+                        150
+                    ],
+                    "table_id": "coated_115_150"
+                },
+                {
+                    "gsm": [
+                        200,
+                        250,
+                        300
+                    ],
+                    "table_id": "coated_200_300"
+                }
+            ]
+        },
+        "lithosticker": {
+            "label_key": "paper_lithosticker",
+            "duplex": false,
+            "table_id": "lithosticker"
+        },
+        "vinyl": {
+            "label_key": "paper_vinyl",
+            "duplex": false,
+            "table_id": "vinyl"
+        },
+        "bond": {
+            "label_key": "paper_bond",
+            "duplex": true,
+            "table_id": "coated_115_150"
+        }
+    },
+    "sfc_fulfillment_settings": {
+        "shopCity": "Caracas",
+        "sameDayShowOnCalculator": true,
+        "sameDayAllowLocalPickup": true,
+        "sameDayAllowShopCityDelivery": true
+    }
+}

@@ -119,12 +119,83 @@ if ( ! function_exists( 'do_action' ) ) {
     }
 }
 
-if ( ! function_exists( 'get_option' ) ) {
+/* -------------------------------------------------------------------------
+ * Persistent options store
+ *
+ * The pricing engine reads every editable value (price tables, lamination /
+ * die-cut / turnaround / job-service rates, sheet specs, quantity tiers,
+ * paper catalog, fulfillment) through get_option(). Instead of the DB the
+ * plugin used, this app persists overrides to a JSON file
+ * (data/config/options.json). Any key absent from the file falls back to the
+ * code default passed by the caller, so deleting the file restores defaults.
+ * ---------------------------------------------------------------------- */
+
+if ( ! function_exists( 'sfc_options_store_file' ) ) {
+    function sfc_options_store_file() {
+        return SFC_APP_DIR . '/data/config/options.json';
+    }
+}
+
+if ( ! function_exists( 'sfc_options_store' ) ) {
     /**
-     * No options store: always fall back to the seeded default.
+     * Load (once) and return the full options store.
+     *
+     * @return array<string,mixed>
      */
+    function sfc_options_store() {
+        if ( ! isset( $GLOBALS['__sfc_options'] ) ) {
+            $file    = sfc_options_store_file();
+            $decoded = is_file( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null;
+            $GLOBALS['__sfc_options'] = is_array( $decoded ) ? $decoded : array();
+        }
+        return $GLOBALS['__sfc_options'];
+    }
+}
+
+if ( ! function_exists( 'sfc_options_persist' ) ) {
+    /**
+     * Write the in-memory store to disk (atomic, pretty-printed).
+     *
+     * @return bool
+     */
+    function sfc_options_persist() {
+        $file = sfc_options_store_file();
+        $dir  = dirname( $file );
+        if ( ! is_dir( $dir ) && ! mkdir( $dir, 0775, true ) && ! is_dir( $dir ) ) {
+            return false;
+        }
+        $json = json_encode(
+            $GLOBALS['__sfc_options'] ?? array(),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+        $tmp = $file . '.' . getmypid() . '.tmp';
+        if ( false === file_put_contents( $tmp, $json . "\n", LOCK_EX ) ) {
+            return false;
+        }
+        return rename( $tmp, $file );
+    }
+}
+
+if ( ! function_exists( 'get_option' ) ) {
     function get_option( $option, $default = false ) {
-        return $default;
+        $store = sfc_options_store();
+        return array_key_exists( $option, $store ) ? $store[ $option ] : $default;
+    }
+}
+
+if ( ! function_exists( 'update_option' ) ) {
+    function update_option( $option, $value ) {
+        sfc_options_store();
+        $GLOBALS['__sfc_options'][ $option ] = $value;
+        return sfc_options_persist();
+    }
+}
+
+if ( ! function_exists( 'delete_option' ) ) {
+    function delete_option( $option ) {
+        sfc_options_store();
+        unset( $GLOBALS['__sfc_options'][ $option ] );
+        return sfc_options_persist();
     }
 }
 

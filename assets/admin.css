@@ -1,0 +1,140 @@
+/* Sheet Fed Calc — price-maintenance admin. Same dark palette as the calculator. */
+
+:root {
+  --sfc-bg: #101010;
+  --sfc-card: #1a1a1a;
+  --sfc-border: #333333;
+  --sfc-border-hi: #444444;
+  --sfc-text-primary: #dcdcdc;
+  --sfc-text-secondary: #a8a8a8;
+  --sfc-text-muted: #7a7a7a;
+  --sfc-accent: oklch(0.66 0.107 220.6);
+  --sfc-accent-soft: color-mix(in oklch, var(--sfc-accent) 18%, transparent);
+  --sfc-success: #57c97a;
+  --sfc-error: #f87171;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+.adm-body {
+  min-height: 100vh;
+  background: var(--sfc-bg);
+  color: var(--sfc-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.adm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--sfc-border);
+  position: sticky;
+  top: 0;
+  background: var(--sfc-bg);
+  z-index: 5;
+}
+.adm-nav a {
+  color: var(--sfc-text-secondary);
+  text-decoration: none;
+  margin-left: 18px;
+  font-size: 0.9rem;
+}
+.adm-nav a:hover { color: var(--sfc-accent); }
+
+.adm-main { max-width: 900px; margin: 0 auto; padding: 24px; }
+.adm-intro { color: var(--sfc-text-secondary); }
+.adm-intro code, .adm-flash code, .adm-help code {
+  background: #000; padding: 1px 6px; border: 1px solid var(--sfc-border); color: var(--sfc-text-primary);
+}
+
+.adm-toc {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  padding: 14px 0; margin-bottom: 8px;
+  border-top: 1px solid var(--sfc-border);
+  border-bottom: 1px solid var(--sfc-border);
+}
+.adm-toc a { color: var(--sfc-accent); text-decoration: none; font-size: 0.9rem; }
+.adm-toc a:hover { text-decoration: underline; }
+
+.adm-section { margin: 34px 0; scroll-margin-top: 70px; }
+.adm-section > h2 {
+  font-size: 1.25rem; margin: 0 0 14px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--sfc-border);
+}
+.adm-section h3 { font-size: 1rem; margin: 0 0 12px; color: var(--sfc-text-secondary); }
+
+.adm-card {
+  background: var(--sfc-card);
+  border: 1px solid var(--sfc-border);
+  padding: 18px;
+  margin: 0 0 18px;
+}
+.adm-card legend { padding: 0 8px; color: var(--sfc-accent); font-weight: 600; }
+fieldset.adm-card { margin-bottom: 18px; }
+
+.adm-row {
+  display: flex; align-items: center; gap: 10px;
+  margin: 8px 0; color: var(--sfc-text-secondary);
+}
+.adm-row > span { flex: 1; }
+.adm-row--stack { flex-direction: column; align-items: stretch; }
+.adm-grid2 { display: grid; grid-template-columns: 1fr; gap: 4px 24px; }
+@media (min-width: 620px) { .adm-grid2 { grid-template-columns: 1fr 1fr; } }
+
+.adm-check { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; color: var(--sfc-text-secondary); }
+.adm-check input { margin-top: 4px; }
+
+input[type="number"], input[type="text"], input[type="password"] {
+  background: #000;
+  border: 1px solid var(--sfc-border-hi);
+  color: var(--sfc-text-primary);
+  padding: 7px 9px;
+  font: inherit;
+  width: 110px;
+}
+input[type="text"], input[type="password"] { width: 100%; max-width: 320px; }
+input:focus { outline: none; border-color: var(--sfc-accent); box-shadow: 0 0 0 1px var(--sfc-accent); }
+
+.adm-grid-scroll { overflow-x: auto; }
+.adm-price-table { border-collapse: collapse; width: 100%; }
+.adm-price-table th, .adm-price-table td {
+  border: 1px solid var(--sfc-border);
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+.adm-price-table thead th { color: var(--sfc-text-secondary); font-weight: 600; }
+.adm-price-table tbody th { color: var(--sfc-text-muted); font-weight: 500; }
+.adm-price-table input { width: 90px; }
+
+.adm-btn {
+  background: var(--sfc-accent);
+  color: #101010;
+  border: 0;
+  padding: 9px 18px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.adm-btn:hover { filter: brightness(1.08); }
+.adm-btn--danger { background: var(--sfc-error); color: #1a0000; }
+
+.adm-help { color: var(--sfc-text-muted); font-size: 0.85rem; margin: 0 0 12px; }
+
+.adm-flash { padding: 12px 16px; margin: 16px 0; border: 1px solid var(--sfc-border); }
+.adm-flash--ok  { border-color: #2f6b45; background: #12251a; color: var(--sfc-success); }
+.adm-flash--err { border-color: #7f1d1d; background: #2c1515; color: var(--sfc-error); }
+
+/* Login */
+.adm-body--login { display: flex; align-items: center; justify-content: center; }
+.adm-login { width: 100%; max-width: 380px; padding: 24px; }
+.adm-login h1 { font-size: 1.3rem; margin: 0 0 16px; }
+.adm-login__back { margin-top: 16px; }
+.adm-login__back a { color: var(--sfc-text-secondary); text-decoration: none; font-size: 0.9rem; }
+.adm-login__back a:hover { color: var(--sfc-accent); }
