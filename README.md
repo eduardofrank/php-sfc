@@ -48,6 +48,38 @@ The engine is ported behind a shim rather than rewritten, so quotes are
 penny-identical to the plugin. `get_option()` returns the seeded defaults
 (default price tables, rates, sheet specs), so there is no database.
 
+## Maintaining prices
+
+All price-affecting values (price tables, lamination / die-cut / turnaround /
+job-service rates, sheet specs, imposition gap, quantity tiers, fulfillment) are
+read through `get_option()`, which is backed by a JSON store at
+**`data/config/options.json`** (tracked in git — price changes are versioned).
+Any key absent from the file falls back to the code default, so deleting the
+file restores defaults.
+
+Two ways to edit:
+
+1. **Admin UI** — a password-protected page at **`/admin`**. Every form saves
+   through the ported validators (`sfc_sanitize_price_tables()`, …), so an
+   invalid entry is rejected, not stored. Set the password first:
+
+   ```bash
+   ddev exec php public/bin/set-admin-password.php 'your-strong-password'
+   ```
+
+   The hash is written to `data/config/admin-password.php` — gitignored and an
+   `ABSPATH`-guarded PHP file, so it is never served as static text. (You can
+   instead set `SFC_ADMIN_PASSWORD_HASH` in the web environment.)
+
+2. **Edit the file** — change `data/config/options.json` by hand. It is
+   re-validated on load. Regenerate it from the code defaults any time with:
+
+   ```bash
+   php public/bin/seed-config.php
+   ```
+
+After either, commit `data/config/options.json` to version the change.
+
 ## Development
 
 DDEV, PHP 8.4, nginx-fpm, docroot `public/`.
