@@ -1,0 +1,5 @@
+# Saved / shareable quote records (runtime user data)
+/data/quotes/*.json
+
+# OS noise
+.DS_Store
