@@ -66,7 +66,7 @@ function sfc_app_get_landing_products() {
     $subtitles = array(
         'hojas-membretadas'        => 'Papelería corporativa en papel bond, carta o A4.',
         'tarjetas-de-presentacion' => 'Tarjetas en papel recubierto 300 g, mate o brillante.',
-        'posters'                  => 'Afiches a gran formato en una sola cara.',
+        'posters'                  => 'Afiches en formato cuarto de pliego impresos por una sola cara.',
         'postales'                 => 'Postales en tamaño estándar o dimensiones a medida.',
         'volantes-y-flyers'        => 'Volantes promocionales en varios tamaños y papeles.',
         'catalogos-y-revistas'     => 'Cuadernillos grapados con tripa y portada.',
