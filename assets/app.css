@@ -1,0 +1,177 @@
+/* Sheet Fed Calc — standalone page shell.
+   Mirrors the calculator's .sfc dark-theme tokens so the whole site reads as
+   one surface. Values are kept in sync with assets/calculator.css. */
+
+:root {
+  --sfc-bg: #101010;
+  --sfc-card: #1a1a1a;
+  --sfc-border: #333333;
+  --sfc-border-hi: #444444;
+  --sfc-text-primary: #dcdcdc;
+  --sfc-text-secondary: #a8a8a8;
+  --sfc-text-muted: #7a7a7a;
+  --sfc-accent: oklch(0.66 0.107 220.6);
+  --sfc-accent-soft: color-mix(in oklch, var(--sfc-accent) 18%, transparent);
+  --sfc-radius: 0;
+  --sfc-space: 0.875rem;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+.app-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sfc-bg);
+  color: var(--sfc-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--sfc-border);
+}
+
+.app-header__brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-size: 1.05rem;
+  color: var(--sfc-text-primary);
+  text-decoration: none;
+}
+
+.app-header__back {
+  color: var(--sfc-text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.app-header__back:hover { color: var(--sfc-accent); }
+
+/* ---- Main ---- */
+.app-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.app-hero { margin: 24px 0 32px; }
+
+.app-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: var(--sfc-text-primary);
+}
+
+.app-lead {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--sfc-text-secondary);
+}
+
+/* ---- Product grid (the ten choices) ---- */
+.product-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--sfc-border);
+  border: 1px solid var(--sfc-border);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .product-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.product-card { background: var(--sfc-card); }
+
+.product-card__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 20px;
+  min-height: 100%;
+  text-decoration: none;
+  color: inherit;
+  transition: background 120ms ease;
+}
+
+.product-card__link:hover,
+.product-card__link:focus-visible {
+  background: color-mix(in oklch, var(--sfc-accent) 12%, var(--sfc-card));
+  outline: none;
+}
+
+.product-card__index {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: var(--sfc-text-muted);
+  padding-top: 3px;
+  min-width: 1.6em;
+}
+
+.product-card__body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.product-card__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--sfc-text-primary);
+}
+
+.product-card__link:hover .product-card__title,
+.product-card__link:focus-visible .product-card__title {
+  color: var(--sfc-accent);
+}
+
+.product-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--sfc-text-secondary);
+}
+
+.product-card__arrow {
+  color: var(--sfc-text-muted);
+  transition: transform 120ms ease, color 120ms ease;
+}
+.product-card__link:hover .product-card__arrow {
+  color: var(--sfc-accent);
+  transform: translateX(3px);
+}
+
+.product-card--hub .product-card__link {
+  border-left: 2px solid var(--sfc-accent);
+}
+
+/* ---- Not found ---- */
+.app-notfound { padding: 40px 0; }
+.app-notfound a { color: var(--sfc-accent); }
+
+/* ---- Footer ---- */
+.app-footer {
+  flex-shrink: 0;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  border-top: 1px solid var(--sfc-border);
+  color: var(--sfc-text-muted);
+  font-size: 0.8rem;
+}

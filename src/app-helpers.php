@@ -191,6 +191,30 @@ function sfc_app_load_quote( $id ) {
 }
 
 /**
+ * Absolute origin (scheme://host[:port]) for the current request.
+ *
+ * @return string
+ */
+function sfc_app_base_url() {
+    $https  = ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== $_SERVER['HTTPS'] )
+        || ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO'] );
+    $scheme = $https ? 'https' : 'http';
+    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    return $scheme . '://' . $host;
+}
+
+/**
+ * Absolute shareable URL that reopens a saved quote.
+ *
+ * @param string $slug Product slug.
+ * @param string $id   Quote id.
+ * @return string
+ */
+function sfc_app_share_url( $slug, $id ) {
+    return sfc_app_base_url() . '/product.php?product=' . rawurlencode( $slug ) . '&quote=' . rawurlencode( $id );
+}
+
+/**
  * JSON-encode helper (kept separate so the engine's wp_json_encode is not needed).
  *
  * @param mixed $data Data to encode.

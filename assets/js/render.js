@@ -341,23 +341,6 @@
       );
     },
 
-    artworkSection: function () {
-      // The upload input lives on the cart page (see [sfc_cart_artwork]); the
-      // product page only points customers there. Uploading against a real
-      // cart line keeps the public upload endpoint out of reach of bare bots.
-      var strings = SFC.strings;
-      var esc = utils.esc;
-
-      return (
-        '<span class="sfc__label">' +
-        esc(strings.artwork_label || 'Arte (opcional)') +
-        '</span>' +
-        '<p class="sfc__help sfc__artwork-hint">' +
-        esc(strings.artwork_cart_hint || '') +
-        '</p>'
-      );
-    },
-
     selectionNotice: function () {
       var strings = SFC.strings;
 
@@ -383,7 +366,6 @@
       $('#sfc-quote-warnings').html(SFC.render.warnings());
       $('#sfc-quote-viz').html(SFC.render.layoutViz());
       $('#sfc-quote-summary').html(SFC.render.summary());
-      $('#sfc-add-to-cart').prop('disabled', !quote || !data.wooProductId);
       $('#sfc-save-quote').prop('disabled', !quote);
       // Any quote change invalidates a previously shown share link.
       $('#sfc-share-link').empty();
@@ -427,15 +409,7 @@
         '<div id="sfc-quote-summary">' +
         SFC.render.summary() +
         '</div>' +
-        '<div id="sfc-artwork" class="sfc__artwork">' +
-        SFC.render.artworkSection() +
-        '</div>' +
-        '<button type="button" id="sfc-add-to-cart" class="sfc__btn"' +
-        (!quote || !data.wooProductId ? ' disabled' : '') +
-        '>' +
-        utils.esc(strings.add_to_cart || 'Agregar al carrito') +
-        '</button>' +
-        '<button type="button" id="sfc-save-quote" class="sfc__btn sfc__btn--secondary"' +
+        '<button type="button" id="sfc-save-quote" class="sfc__btn"' +
         (!quote ? ' disabled' : '') +
         '>' +
         utils.esc(strings.save_quote || 'Guardar cotización') +
