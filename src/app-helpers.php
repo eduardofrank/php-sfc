@@ -69,7 +69,7 @@ function sfc_app_get_landing_products() {
         'posters'                  => 'Afiches en formato cuarto de pliego impresos por una sola cara.',
         'postales'                 => 'Postales en tamaño estándar o dimensiones a medida.',
         'volantes-y-flyers'        => 'Volantes promocionales en varios tamaños y papeles.',
-        'catalogos-y-revistas'     => 'Cuadernillos grapados con tripa y portada.',
+        'catalogos-y-revistas'     => 'Cuadernillos engrapados a caballo con tripa y portada.',
         'etiquetas-rectangulares'  => 'Stickers rectangulares a medida en lithosticker o vinil.',
         'stickers-y-etiquetas'     => 'Stickers troquelados: circulares o de forma libre.',
         'albumes'                  => 'Álbumes de tapa dura impresos a doble cara.',
