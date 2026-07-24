@@ -45,6 +45,7 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
         <strong>Sheet Fed Calc</strong> · Mantenimiento de precios
     </div>
     <nav class="adm-nav">
+        <a href="quotes.php">Cotizaciones</a>
         <a href="<?php echo $h( SFC_BASE_PATH ); ?>/" target="_blank" rel="noopener">Ver calculadora ↗</a>
         <a href="logout.php">Cerrar sesión</a>
     </nav>
