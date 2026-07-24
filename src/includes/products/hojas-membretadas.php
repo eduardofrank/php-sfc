@@ -15,7 +15,7 @@ function sfc_get_hojas_membretadas_product_config() {
         'language'          => 'es',
         'paperType'         => 'bond',
         'printMode'         => '4x0',
-        'minQuantity'       => 100,
+        'minQuantity'       => 1,
         'defaultQuantity'   => 100,
         'sizes'             => array(
             'carta' => array(
@@ -109,8 +109,8 @@ function sfc_get_hojas_membretadas_product_config() {
                 'es' => 'La última hoja usa {filled} de {total} espacios disponibles.',
             ),
             'quantity_help' => array(
-                'en' => 'Minimum {min} letterheads. Quantity is printed {units} up on each press sheet.',
-                'es' => 'Mínimo {min} hojas membretadas. La cantidad se imprime {units} por hoja de impresión.',
+                'en' => 'Quantity is printed {units} up on each press sheet.',
+                'es' => 'La cantidad se imprime {units} por hoja de impresión.',
             ),
             'add_to_cart' => array(
                 'en' => 'Add to cart',
