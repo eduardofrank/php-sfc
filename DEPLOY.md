@@ -2,7 +2,9 @@
 
 The whole app lives in one directory (`index.php`, `product.php`, `admin/`,
 `api/`, `assets/`, plus `bootstrap.php`, `wp-shims.php`, `src/`, `data/`). No
-database, no Composer, no non-core PHP extensions — just PHP 8.x.
+Composer, just PHP 8.x with the `pdo_pgsql` extension. Saved quotes are stored in
+**PostgreSQL** (step 4); the calculator and pricing work without it — only the
+Save/quote-tracking feature needs the database.
 
 It works served **at the site root** *or* **from a subdirectory** — the base
 path (e.g. `/php-sfc`) is detected automatically, so every asset, API call, and
@@ -56,7 +58,45 @@ PHP file that is never served as text). Log in at
 `http://your-host/php-sfc/admin/login.php`. Alternatively, set
 `SFC_ADMIN_PASSWORD_HASH` in the Apache/PHP environment.
 
-## 4. Make sure `.htaccess` overrides are allowed
+## 4. PostgreSQL (quote database)
+
+Saved quotes, clients, and quote numbers live in PostgreSQL. Ensure PHP has
+`pdo_pgsql` (`php -m | grep pdo_pgsql`), then create a database and role:
+
+```bash
+sudo -u postgres psql -c "CREATE ROLE sheetfedcalc LOGIN PASSWORD 'a-strong-db-password';"
+sudo -u postgres psql -c "CREATE DATABASE sheetfedcalc OWNER sheetfedcalc;"
+```
+
+Tell the app how to connect — either environment variables (preferred) in the
+vhost/PHP env:
+
+```apache
+SetEnv SFC_DB_HOST 127.0.0.1
+SetEnv SFC_DB_PORT 5432
+SetEnv SFC_DB_NAME sheetfedcalc
+SetEnv SFC_DB_USER sheetfedcalc
+SetEnv SFC_DB_PASS a-strong-db-password
+```
+
+…or a gitignored, ABSPATH-guarded file `data/config/db.php`:
+
+```php
+<?php if ( ! defined( 'ABSPATH' ) ) { exit; }
+return array(
+    'host' => '127.0.0.1', 'port' => '5432', 'name' => 'sheetfedcalc',
+    'user' => 'sheetfedcalc', 'password' => 'a-strong-db-password',
+);
+```
+
+Create the schema (idempotent — safe to re-run on every deploy):
+
+```bash
+cd /var/www/localhost/htdocs/php-sfc
+php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_quote_counters, sfc_quotes"
+```
+
+## 5. Make sure `.htaccess` overrides are allowed
 
 The shipped `.htaccess` files harden the site (no directory listings, block
 hidden files like `.git`, and deny web access to `data/`, `src/`, `bin/`). They
@@ -80,7 +120,7 @@ off). If the whole site returns **500** right after deploy, the host allows only
 per-directory `data/.htaccess`, `src/.htaccess`, `bin/.htaccess` deny files use
 only `Require`, which is the most widely allowed).
 
-## 5. HTTPS (recommended)
+## 6. HTTPS (recommended)
 
 Saved-quote share links and the admin session cookie should travel over TLS. On
 a shared host this is usually managed for you; otherwise `certbot --apache`.
@@ -99,7 +139,11 @@ rsync -a --delete \
   --exclude='.git' \
   --exclude='data/quotes/' \
   --exclude='data/config/admin-password.php' \
+  --exclude='data/config/db.php' \
   /tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
+
+# Apply any new schema (idempotent).
+php /var/www/localhost/htdocs/php-sfc/bin/db-migrate.php
 ```
 
 **Prices and updates:** `data/config/options.json` is tracked in git. If you

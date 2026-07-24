@@ -34,19 +34,38 @@ re-prices it and never trusts a client-supplied total).
 |------|------|
 | `index.php` | Landing page — the ten products as the first choice |
 | `product.php` | Per-product calculator + folded-brochure hub (`?product=`, `?fold=`, `?quote=`) |
-| `api/index.php` | JSON router: `sfc_calculate_product_quote`, `sfc_save_quote` |
+| `api/index.php` | JSON router: `sfc_calculate_product_quote`, `sfc_save_quote`, `sfc_client_names` |
 | `bootstrap.php` | Constants + shim + engine load order |
-| `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→defaults, …) |
+| `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→store, …) |
 | `src/includes/` | Pricing/config/steps engine, ported verbatim from the plugin |
-| `src/app-helpers.php` | Quote seeding, landing list, file-based save/share, JSON envelopes |
+| `src/app-helpers.php` | Quote seeding, landing list, JSON envelopes, legacy file save/share |
+| `src/db.php` | PostgreSQL PDO connection (env → `data/config/db.php` → DDEV defaults) |
+| `src/quotes-repo.php` | Clients + quotes data access (create, reopen, list, delete) |
+| `admin/` | Password-protected price maintenance + quote browser |
 | `assets/calculator.css` | Calculator styles (ported verbatim — `.sfc` dark theme) |
-| `assets/app.css` | Page shell styles (same palette) |
 | `assets/js/` | Declarative calculator front-end (jQuery, ported) |
-| `data/quotes/` | Saved shareable quotes (JSON, gitignored) |
+| `data/quotes/` | Legacy file-based shares (gitignored); superseded by the database |
 
 The engine is ported behind a shim rather than rewritten, so quotes are
-penny-identical to the plugin. `get_option()` returns the seeded defaults
-(default price tables, rates, sheet specs), so there is no database.
+penny-identical to the plugin. `get_option()` reads the JSON options store
+(default price tables, rates, sheet specs), so pricing needs no database.
+
+## Saved quotes (PostgreSQL)
+
+Saving a quote is a real, durable record — not just a share link. Each save
+captures a **client** (reusable, case-insensitive), a **quote number**
+(`YYYY-NNNN`, per-year), the calculator **state**, and a **frozen priced
+snapshot**, so a quote number represents a fixed, dated price even if prices
+change later. Reopening `product.php?quote=<token>` shows a frozen-price banner
+above the live calculator.
+
+- Schema (`sfc_clients`, `sfc_quotes`, `sfc_quote_counters`) is created by
+  `bin/db-migrate.php` (idempotent).
+- Connection resolves from `SFC_DB_*` env → gitignored `data/config/db.php` →
+  DDEV defaults (`src/db.php`). Local dev uses DDEV's bundled Postgres 15.
+- `/admin/quotes.php` browses, searches, reopens, and deletes quotes.
+- Data access lives in `src/quotes-repo.php`; the API path is `sfc_save_quote`
+  in `api/index.php` (re-prices server-side; never trusts a client total).
 
 ## Maintaining prices
 
@@ -82,12 +101,16 @@ After either, commit `data/config/options.json` to version the change.
 
 ## Development
 
-DDEV, PHP 8.4, nginx-fpm, docroot `public/`.
+DDEV, PHP 8.4, nginx-fpm, docroot `public/`, PostgreSQL 15.
 
 ```bash
 ddev start
+ddev exec php public/bin/db-migrate.php    # create the quote tables
 # https://php-sfc.ddev.site/
 ```
+
+The DDEV project uses PostgreSQL (`database.type: postgres` in `.ddev/config.yaml`);
+the app connects with DDEV's default credentials automatically (`src/db.php`).
 
 ### Verified quotes (defaults)
 
