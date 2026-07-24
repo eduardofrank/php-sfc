@@ -100,3 +100,5 @@ foreach ( $sfc_engine_files as $sfc_file ) {
 }
 
 require_once __DIR__ . '/src/app-helpers.php';
+require_once __DIR__ . '/src/db.php';
+require_once __DIR__ . '/src/quotes-repo.php';
