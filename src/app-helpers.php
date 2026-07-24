@@ -211,7 +211,7 @@ function sfc_app_base_url() {
  * @return string
  */
 function sfc_app_share_url( $slug, $id ) {
-    return sfc_app_base_url() . '/product.php?product=' . rawurlencode( $slug ) . '&quote=' . rawurlencode( $id );
+    return sfc_app_base_url() . SFC_BASE_PATH . '/product.php?product=' . rawurlencode( $slug ) . '&quote=' . rawurlencode( $id );
 }
 
 /**

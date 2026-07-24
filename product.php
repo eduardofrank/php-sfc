@@ -36,7 +36,7 @@ if ( $config && isset( $_GET['quote'] ) ) {
 $data = $config ? sfc_build_product_js_data( $slug ) : null;
 if ( $config && ! is_wp_error( $data ) ) {
     // Standalone endpoints replace admin-ajax; no nonce needed.
-    $data['ajaxUrl'] = '/api/index.php';
+    $data['ajaxUrl'] = SFC_BASE_PATH . '/api/index.php';
     $data['nonce']   = '';
 }
 
@@ -45,17 +45,19 @@ $page_title = $config && ! is_wp_error( $data )
     : 'Calculadora';
 
 require __DIR__ . '/src/partials/head.php';
+
+$b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
 ?>
 <header class="app-header">
-    <a class="app-header__brand" href="index.php">Sheet&nbsp;Fed&nbsp;Calc</a>
-    <a class="app-header__back" href="index.php">← Todos los productos</a>
+    <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
+    <a class="app-header__back" href="<?php echo esc_attr( $b ); ?>/">← Todos los productos</a>
 </header>
 
 <main class="app-main">
 <?php if ( ! $config || is_wp_error( $data ) ) : ?>
     <div class="sfc sfc--error app-notfound">
         <h1>Producto no encontrado</h1>
-        <p>El producto solicitado no existe. <a href="index.php">Volver al inicio</a>.</p>
+        <p>El producto solicitado no existe. <a href="<?php echo esc_attr( $b ); ?>/">Volver al inicio</a>.</p>
     </div>
 <?php else : ?>
 
@@ -72,8 +74,8 @@ require __DIR__ . '/src/partials/head.php';
                     <?php
                     $active   = ( $item_slug === $fold_slug );
                     $label    = sfc_get_fold_hub_item_label( $item, 'es' );
-                    $icon_url = 'assets/img/' . rawurlencode( (string) ( $item['icon'] ?? '' ) );
-                    $href     = 'product.php?product=folletos-plegados&fold=' . rawurlencode( $item_slug );
+                    $icon_url = $b . '/assets/img/' . rawurlencode( (string) ( $item['icon'] ?? '' ) );
+                    $href     = $b . '/product.php?product=folletos-plegados&fold=' . rawurlencode( $item_slug );
                     ?>
                     <a class="sfc-fold-hub__item<?php echo $active ? ' is-active' : ' is-dimmed'; ?>"
                        href="<?php echo esc_attr( $href ); ?>"
@@ -91,15 +93,15 @@ require __DIR__ . '/src/partials/head.php';
     <div class="sfc" id="sfc-root"></div>
 
     <script>window.__SFC_DATA = <?php echo wp_json_encode_compat( $data ); ?>;</script>
-    <script src="assets/vendor/jquery.min.js"></script>
-    <script src="assets/js/context.js"></script>
-    <script src="assets/js/utils.js"></script>
-    <script src="assets/js/state.js"></script>
-    <script src="assets/js/steps.js"></script>
-    <script src="assets/js/render.js"></script>
-    <script src="assets/js/quote.js"></script>
-    <script src="assets/js/events.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/vendor/jquery.min.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/context.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/utils.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/state.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/steps.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/render.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/quote.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/events.js"></script>
+    <script src="<?php echo esc_attr( $b ); ?>/assets/js/app.js"></script>
 <?php endif; ?>
 </main>
 

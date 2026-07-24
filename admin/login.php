@@ -31,7 +31,7 @@ $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ingreso · Mantenimiento de precios</title>
-    <link rel="stylesheet" href="/assets/admin.css">
+    <link rel="stylesheet" href="<?php echo $h( SFC_BASE_PATH ); ?>/assets/admin.css">
 </head>
 <body class="adm-body adm-body--login">
 <main class="adm-login">
@@ -53,7 +53,7 @@ $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 
             <button type="submit" class="adm-btn">Ingresar</button>
         </form>
     <?php endif; ?>
-    <p class="adm-login__back"><a href="/">← Volver a la calculadora</a></p>
+    <p class="adm-login__back"><a href="<?php echo $h( SFC_BASE_PATH ); ?>/">← Volver a la calculadora</a></p>
 </main>
 </body>
 </html>

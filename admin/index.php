@@ -37,7 +37,7 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mantenimiento de precios · Sheet Fed Calc</title>
-    <link rel="stylesheet" href="/assets/admin.css">
+    <link rel="stylesheet" href="<?php echo $h( SFC_BASE_PATH ); ?>/assets/admin.css">
 </head>
 <body class="adm-body">
 <header class="adm-header">
@@ -45,7 +45,7 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
         <strong>Sheet Fed Calc</strong> · Mantenimiento de precios
     </div>
     <nav class="adm-nav">
-        <a href="/" target="_blank" rel="noopener">Ver calculadora ↗</a>
+        <a href="<?php echo $h( SFC_BASE_PATH ); ?>/" target="_blank" rel="noopener">Ver calculadora ↗</a>
         <a href="logout.php">Cerrar sesión</a>
     </nav>
 </header>
