@@ -29,5 +29,6 @@
 
   SFC.render.page();
   SFC.events.bindDelegated();
+  SFC.events.loadClientNames();
   SFC.quoteApi.fetch();
 })(window, jQuery);

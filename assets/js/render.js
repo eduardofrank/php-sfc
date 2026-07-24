@@ -366,7 +366,7 @@
       $('#sfc-quote-warnings').html(SFC.render.warnings());
       $('#sfc-quote-viz').html(SFC.render.layoutViz());
       $('#sfc-quote-summary').html(SFC.render.summary());
-      $('#sfc-save-quote').prop('disabled', !quote);
+      $('#sfc-save-quote').prop('disabled', !quote || !SFC.clientName);
       // Any quote change invalidates a previously shown share link.
       $('#sfc-share-link').empty();
     },
@@ -409,8 +409,31 @@
         '<div id="sfc-quote-summary">' +
         SFC.render.summary() +
         '</div>' +
+        '<div class="sfc__save-fields">' +
+        '<label class="sfc__field"><span class="sfc__label">' +
+        utils.esc(strings.client_name_label || 'Cliente') +
+        '</span>' +
+        '<input type="text" id="sfc-client-name" class="sfc__input" list="sfc-client-list" autocomplete="off" placeholder="' +
+        utils.esc(strings.client_name_placeholder || 'Nombre del cliente') +
+        '" value="' +
+        utils.esc(SFC.clientName || '') +
+        '" /></label>' +
+        '<datalist id="sfc-client-list">' +
+        (SFC.clientNames || [])
+          .map(function (name) {
+            return '<option value="' + utils.esc(name) + '"></option>';
+          })
+          .join('') +
+        '</datalist>' +
+        '<label class="sfc__field"><span class="sfc__label">' +
+        utils.esc(strings.client_email_label || 'Correo (opcional)') +
+        '</span>' +
+        '<input type="email" id="sfc-client-email" class="sfc__input" autocomplete="off" value="' +
+        utils.esc(SFC.clientEmail || '') +
+        '" /></label>' +
+        '</div>' +
         '<button type="button" id="sfc-save-quote" class="sfc__btn"' +
-        (!quote ? ' disabled' : '') +
+        (!quote || !SFC.clientName ? ' disabled' : '') +
         '>' +
         utils.esc(strings.save_quote || 'Guardar cotización') +
         '</button>' +

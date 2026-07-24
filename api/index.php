@@ -31,21 +31,48 @@ switch ( $action ) {
         break;
 
     case 'sfc_save_quote':
-        // Re-quote to guarantee the saved configuration is valid and priceable.
+        $client_name = trim( (string) wp_unslash( $_POST['client_name'] ?? '' ) );
+        if ( '' === $client_name ) {
+            sfc_app_send_error( 'Ingrese el nombre del cliente.', 'client_required' );
+        }
+        $client_email = trim( (string) wp_unslash( $_POST['client_email'] ?? '' ) );
+        $client_phone = trim( (string) wp_unslash( $_POST['client_phone'] ?? '' ) );
+
+        // Re-quote to guarantee the saved configuration is valid and priceable;
+        // the server is the sole price authority and this becomes the frozen snapshot.
         $quote = sfc_calculate_product_quote( $slug, $state );
         if ( is_wp_error( $quote ) ) {
             sfc_app_send_error( $quote->get_error_message(), $quote->get_error_code() );
         }
 
-        // Persist the normalized state the engine actually used.
         $save_state = isset( $quote['state'] ) && is_array( $quote['state'] ) ? $quote['state'] : $state;
-        $id         = sfc_app_save_quote( $slug, $save_state );
-        if ( is_wp_error( $id ) ) {
-            sfc_app_send_error( $id->get_error_message(), $id->get_error_code() );
+
+        try {
+            $client_id = sfc_quotes_find_or_create_client( $client_name, $client_email, $client_phone );
+            $row       = sfc_quotes_create( $slug, $save_state, $quote, $client_id );
+        } catch ( Throwable $e ) {
+            error_log( 'sfc_save_quote failed: ' . $e->getMessage() );
+            sfc_app_send_error( 'No se pudo guardar la cotización.', 'save_failed' );
         }
 
-        $url = sfc_app_share_url( $slug, $id );
-        sfc_app_send_success( array( 'id' => $id, 'url' => $url ) );
+        sfc_app_send_success(
+            array(
+                'id'          => $row['shareToken'],
+                'url'         => sfc_app_share_url( $slug, $row['shareToken'] ),
+                'quoteNumber' => $row['quoteNumber'],
+                'clientName'  => $client_name,
+                'total'       => $row['total'],
+            )
+        );
+        break;
+
+    case 'sfc_client_names':
+        try {
+            $names = sfc_client_names( (string) wp_unslash( $_POST['prefix'] ?? '' ) );
+        } catch ( Throwable $e ) {
+            $names = array();
+        }
+        sfc_app_send_success( array( 'names' => $names ) );
         break;
 
     default:

@@ -21,15 +21,41 @@ if ( $is_hub ) {
 $config = sfc_get_product_config( $slug );
 
 // ---- Optional saved-quote seed ---------------------------------------------
-$seed_notice = null;
+// A saved quote reopens from PostgreSQL by its share token and shows a frozen
+// price banner. Old file-based share links still resolve as a fallback.
+$quote_banner = null;
 if ( $config && isset( $_GET['quote'] ) ) {
-    $record = sfc_app_load_quote( sanitize_key( wp_unslash( $_GET['quote'] ) ) );
-    if ( $record && ( $record['slug'] ?? '' ) === $slug ) {
+    $token  = sanitize_key( wp_unslash( $_GET['quote'] ) );
+    $record = null;
+
+    try {
+        $record = sfc_quotes_get_by_token( $token );
+    } catch ( Throwable $e ) {
+        $record = null; // DB unavailable — fall through to the file store.
+    }
+
+    if ( $record && ( $record['product_slug'] ?? '' ) === $slug ) {
         $GLOBALS['sfc_seed'] = array(
             'slug'   => $slug,
-            'state'  => (array) ( $record['state'] ?? array() ),
-            'notice' => 'Se abrió una cotización guardada con los precios actuales.',
+            'state'  => (array) $record['state'],
+            'notice' => null, // the banner conveys the saved-quote context
         );
+        $quote_banner = array(
+            'number'   => $record['quote_number'],
+            'client'   => $record['client_name'],
+            'date'     => substr( (string) $record['created_at'], 0, 10 ),
+            'total'    => (float) $record['total_price'],
+            'currency' => $record['currency'],
+        );
+    } else {
+        $file_record = sfc_app_load_quote( $token );
+        if ( $file_record && ( $file_record['slug'] ?? '' ) === $slug ) {
+            $GLOBALS['sfc_seed'] = array(
+                'slug'   => $slug,
+                'state'  => (array) ( $file_record['state'] ?? array() ),
+                'notice' => 'Se abrió una cotización guardada con los precios actuales.',
+            );
+        }
     }
 }
 
@@ -88,6 +114,21 @@ $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
                 <?php endforeach; ?>
             </nav>
         </section>
+    <?php endif; ?>
+
+    <?php if ( $quote_banner ) : ?>
+        <div class="sfc sfc-quote-banner">
+            <div class="sfc-quote-banner__head">
+                <span class="sfc-quote-banner__number">Cotización <?php echo esc_html( $quote_banner['number'] ); ?></span>
+                <span class="sfc-quote-banner__frozen">Precio congelado</span>
+            </div>
+            <dl class="sfc-quote-banner__grid">
+                <div><dt>Cliente</dt><dd><?php echo esc_html( $quote_banner['client'] ); ?></dd></div>
+                <div><dt>Fecha</dt><dd><?php echo esc_html( $quote_banner['date'] ); ?></dd></div>
+                <div><dt>Total</dt><dd class="sfc-quote-banner__total"><?php echo esc_html( $quote_banner['currency'] . ' $' . number_format( $quote_banner['total'], 2 ) ); ?></dd></div>
+            </dl>
+            <p class="sfc-quote-banner__note">Este es el precio de la cotización guardada. La calculadora abajo queda activa; si cambia una opción, mostrará el precio actual.</p>
+        </div>
     <?php endif; ?>
 
     <div class="sfc" id="sfc-root"></div>

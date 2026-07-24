@@ -279,14 +279,50 @@
         nonce: SFC.data.nonce,
         product_slug: SFC.data.productSlug,
         state: JSON.stringify(SFC.state),
+        client_name: SFC.clientName || '',
+        client_email: SFC.clientEmail || '',
       });
     },
 
-    showShareLink: function (url) {
+    // Populate the client-name datalist once from existing clients.
+    loadClientNames: function () {
+      $.post(SFC.data.ajaxUrl, { action: 'sfc_client_names' })
+        .done(function (res) {
+          if (res && res.success && res.data && res.data.names) {
+            SFC.clientNames = res.data.names;
+            var opts = SFC.clientNames
+              .map(function (name) {
+                return '<option value="' + SFC.utils.esc(name) + '"></option>';
+              })
+              .join('');
+            $('#sfc-client-list').html(opts);
+          }
+        });
+    },
+
+    handleClientNameInput: function () {
+      SFC.clientName = String($('#sfc-client-name').val() || '').trim();
+      $('#sfc-save-quote').prop('disabled', !SFC.quote || !SFC.clientName);
+    },
+
+    handleClientEmailInput: function () {
+      SFC.clientEmail = String($('#sfc-client-email').val() || '').trim();
+    },
+
+    showShareLink: function (url, quoteNumber) {
       var strings = SFC.strings;
       var esc = SFC.utils.esc;
+      var numberLine = '';
+      if (quoteNumber) {
+        var tpl = strings.quote_saved_number || 'Cotización {number} guardada';
+        numberLine =
+          '<span class="sfc__share-number">' +
+          esc(tpl.replace('{number}', quoteNumber)) +
+          '</span>';
+      }
 
       $('#sfc-share-link').html(
+        numberLine +
         '<span class="sfc__share-label">' +
           esc(strings.quote_saved_share || 'Comparta este enlace:') +
           '</span>' +
@@ -312,6 +348,11 @@
       if (!SFC.quote || SFC.isSavingQuote) {
         return;
       }
+      if (!SFC.clientName) {
+        SFC.quoteApi.showError(SFC.strings.client_required || 'Ingrese el nombre del cliente.');
+        $('#sfc-client-name').trigger('focus');
+        return;
+      }
 
       SFC.isSavingQuote = true;
       var $btn = $('#sfc-save-quote')
@@ -320,7 +361,9 @@
 
       var finish = function () {
         SFC.isSavingQuote = false;
-        $btn.prop('disabled', !SFC.quote).text(SFC.strings.save_quote || 'Guardar cotización');
+        $btn
+          .prop('disabled', !SFC.quote || !SFC.clientName)
+          .text(SFC.strings.save_quote || 'Guardar cotización');
       };
 
       var showError = function (payload) {
@@ -334,7 +377,10 @@
 
       var onSuccess = function (res) {
         if (res.data && res.data.url) {
-          SFC.events.showShareLink(res.data.url);
+          SFC.events.showShareLink(res.data.url, res.data.quoteNumber);
+          if (SFC.clientName && SFC.clientNames.indexOf(SFC.clientName) === -1) {
+            SFC.clientNames.push(SFC.clientName);
+          }
           finish();
           return;
         }
@@ -371,6 +417,14 @@
 
       root.on('input', '#sfc-custom-width, #sfc-custom-length', function () {
         SFC.events.handleCustomDimensionsInput();
+      });
+
+      root.on('input', '#sfc-client-name', function () {
+        SFC.events.handleClientNameInput();
+      });
+
+      root.on('input', '#sfc-client-email', function () {
+        SFC.events.handleClientEmailInput();
       });
 
       root.on('click', '#sfc-add-to-cart', function () {

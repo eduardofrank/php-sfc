@@ -694,3 +694,60 @@
 .sfc-cart-artwork__status--error {
   color: var(--sfc-error);
 }
+
+/* Saved-quote frozen-price banner (shown when reopening ?quote=<token>) */
+.sfc-quote-banner {
+  border: 1px solid var(--sfc-accent);
+  background: color-mix(in oklch, var(--sfc-accent) 10%, var(--sfc-card));
+  padding: 14px 16px;
+  margin: 0 0 18px;
+}
+.sfc-quote-banner__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sfc-quote-banner__number { font-weight: 700; font-size: 1.05rem; color: var(--sfc-text-primary); }
+.sfc-quote-banner__frozen {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sfc-accent);
+  border: 1px solid var(--sfc-accent);
+  padding: 2px 8px;
+}
+.sfc-quote-banner__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 12px 0 8px;
+}
+.sfc-quote-banner__grid div { display: flex; flex-direction: column; }
+.sfc-quote-banner__grid dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sfc-text-muted);
+}
+.sfc-quote-banner__grid dd { margin: 2px 0 0; color: var(--sfc-text-primary); }
+.sfc-quote-banner__total { font-weight: 700; color: var(--sfc-accent); }
+.sfc-quote-banner__note { margin: 6px 0 0; font-size: 0.8rem; color: var(--sfc-text-secondary); }
+
+/* Client fields in the save panel + saved-quote number */
+.sfc__save-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sfc-border);
+}
+.sfc__field { display: flex; flex-direction: column; gap: 4px; }
+.sfc__share-number {
+  display: block;
+  font-weight: 700;
+  color: var(--sfc-accent);
+  margin-bottom: 4px;
+}
