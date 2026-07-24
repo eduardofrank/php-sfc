@@ -1,0 +1,42 @@
+# Sheet Fed Calc — Apache hardening for the document root.
+# Requires the vhost/Directory to allow overrides:  AllowOverride All
+
+# Landing page is index.php.
+DirectoryIndex index.php
+
+# No directory listings.
+Options -Indexes
+
+# Block hidden files (.git, .gitignore, .htaccess, .env, …). ACME HTTP-01
+# challenges live under .well-known/, whose files do not start with a dot, so
+# certificate issuance still works.
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Internal bootstrap files must never be requested over HTTP. They already
+# self-guard (define ABSPATH / emit nothing), but deny them outright too.
+<FilesMatch "^(bootstrap|wp-shims)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Belt-and-suspenders: block the non-public directories (also covered by the
+# per-directory .htaccess files in data/, src/, bin/). Only applies when
+# mod_rewrite is present; the per-directory denies work without it.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule "(^|/)\.git"        - [F]
+    RewriteRule "^(data|src|bin)(/|$)" - [F]
+</IfModule>
