@@ -1,11 +1,13 @@
 <?php
 /**
  * Calculator page for a single product (?product=slug), and the folded-brochure
- * hub (?product=folletos-plegados[&fold=variant]). Optional ?quote=<id> reopens
- * a saved configuration.
+ * hub (?product=folletos-plegados[&fold=variant]). Its primary action adds the
+ * configured item to the quote draft. Optionally seeds from a finalized quote
+ * item (?from=<token>&item=<pos>) to inspect or re-add it.
  */
 
 require_once __DIR__ . '/bootstrap.php';
+sfc_draft_session_start();
 
 $slug = isset( $_GET['product'] ) ? sanitize_key( str_replace( '_', '-', wp_unslash( $_GET['product'] ) ) ) : '';
 
@@ -20,42 +22,29 @@ if ( $is_hub ) {
 
 $config = sfc_get_product_config( $slug );
 
-// ---- Optional saved-quote seed ---------------------------------------------
-// A saved quote reopens from PostgreSQL by its share token and shows a frozen
-// price banner. Old file-based share links still resolve as a fallback.
-$quote_banner = null;
-if ( $config && isset( $_GET['quote'] ) ) {
-    $token  = sanitize_key( wp_unslash( $_GET['quote'] ) );
-    $record = null;
+// ---- Optionally seed from a finalized quote item ---------------------------
+// "Abrir en calculadora" from a quote document lands here with ?from=<token>
+// &item=<pos>; seed that item's config so it can be inspected or re-added.
+$from_note = null;
+if ( $config && isset( $_GET['from'] ) ) {
+    $token = sanitize_key( wp_unslash( $_GET['from'] ) );
+    $pos   = (int) ( $_GET['item'] ?? 0 );
 
     try {
         $record = sfc_quotes_get_by_token( $token );
     } catch ( Throwable $e ) {
-        $record = null; // DB unavailable — fall through to the file store.
+        $record = null;
     }
 
-    if ( $record && ( $record['product_slug'] ?? '' ) === $slug ) {
+    if ( $record && isset( $record['items'][ $pos ] )
+        && ( $record['items'][ $pos ]['product_slug'] ?? '' ) === $slug ) {
         $GLOBALS['sfc_seed'] = array(
             'slug'   => $slug,
-            'state'  => (array) $record['state'],
-            'notice' => null, // the banner conveys the saved-quote context
+            'state'  => (array) $record['items'][ $pos ]['state'],
+            'notice' => 'Basado en la cotización ' . $record['quote_number']
+                . '. Ajusta y agrégalo a una nueva cotización.',
         );
-        $quote_banner = array(
-            'number'   => $record['quote_number'],
-            'client'   => $record['client_name'],
-            'date'     => substr( (string) $record['created_at'], 0, 10 ),
-            'total'    => (float) $record['total_price'],
-            'currency' => $record['currency'],
-        );
-    } else {
-        $file_record = sfc_app_load_quote( $token );
-        if ( $file_record && ( $file_record['slug'] ?? '' ) === $slug ) {
-            $GLOBALS['sfc_seed'] = array(
-                'slug'   => $slug,
-                'state'  => (array) ( $file_record['state'] ?? array() ),
-                'notice' => 'Se abrió una cotización guardada con los precios actuales.',
-            );
-        }
+        $from_note = $record['quote_number'];
     }
 }
 
@@ -76,8 +65,10 @@ $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
 ?>
 <header class="app-header">
     <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
-    <a class="app-header__back" href="<?php echo esc_attr( $b ); ?>/">← Todos los productos</a>
+    <a class="app-header__back" href="<?php echo esc_attr( $b ); ?>/products.php">← Elegir otro producto</a>
 </header>
+
+<?php require __DIR__ . '/src/partials/draft-bar.php'; ?>
 
 <main class="app-main">
 <?php if ( ! $config || is_wp_error( $data ) ) : ?>
@@ -114,21 +105,6 @@ $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
                 <?php endforeach; ?>
             </nav>
         </section>
-    <?php endif; ?>
-
-    <?php if ( $quote_banner ) : ?>
-        <div class="sfc sfc-quote-banner">
-            <div class="sfc-quote-banner__head">
-                <span class="sfc-quote-banner__number">Cotización <?php echo esc_html( $quote_banner['number'] ); ?></span>
-                <span class="sfc-quote-banner__frozen">Precio congelado</span>
-            </div>
-            <dl class="sfc-quote-banner__grid">
-                <div><dt>Cliente</dt><dd><?php echo esc_html( $quote_banner['client'] ); ?></dd></div>
-                <div><dt>Fecha</dt><dd><?php echo esc_html( $quote_banner['date'] ); ?></dd></div>
-                <div><dt>Total</dt><dd class="sfc-quote-banner__total"><?php echo esc_html( $quote_banner['currency'] . ' $' . number_format( $quote_banner['total'], 2 ) ); ?></dd></div>
-            </dl>
-            <p class="sfc-quote-banner__note">Este es el precio de la cotización guardada. La calculadora abajo queda activa; si cambia una opción, mostrará el precio actual.</p>
-        </div>
     <?php endif; ?>
 
     <div class="sfc" id="sfc-root"></div>

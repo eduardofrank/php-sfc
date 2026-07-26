@@ -279,25 +279,21 @@ function sfc_get_calculator_ui_strings( $language ) {
             'en' => 'Saving…',
             'es' => 'Guardando…',
         ),
-        'client_name_label' => array(
-            'en' => 'Client',
-            'es' => 'Cliente',
+        'add_to_quote' => array(
+            'en' => 'Add to quote',
+            'es' => 'Agregar a la cotización',
         ),
-        'client_name_placeholder' => array(
-            'en' => 'Client name',
-            'es' => 'Nombre del cliente',
+        'adding_to_quote' => array(
+            'en' => 'Adding…',
+            'es' => 'Agregando…',
         ),
-        'client_email_label' => array(
-            'en' => 'Email (optional)',
-            'es' => 'Correo (opcional)',
+        'added_to_quote' => array(
+            'en' => 'Added to the quote ✓',
+            'es' => 'Agregado a la cotización ✓',
         ),
-        'client_required' => array(
-            'en' => 'Enter the client name to save the quote.',
-            'es' => 'Ingrese el nombre del cliente para guardar.',
-        ),
-        'quote_saved_number' => array(
-            'en' => 'Quote {number} saved',
-            'es' => 'Cotización {number} guardada',
+        'view_quote' => array(
+            'en' => 'View quote',
+            'es' => 'Ver cotización',
         ),
         'quote_saved_share' => array(
             'en' => 'Share this link — it reopens this configuration at current prices:',

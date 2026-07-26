@@ -97,20 +97,21 @@ $page_link = static function ( $p ) use ( $search, $h ) {
         <table class="adm-price-table adm-quotes">
             <thead>
                 <tr>
-                    <th>Número</th><th>Cliente</th><th>Producto</th>
+                    <th>Número</th><th>Cliente</th><th>Título</th><th>Ítems</th>
                     <th>Total</th><th>Fecha</th><th></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if ( ! $rows ) : ?>
-                    <tr><td colspan="6">No hay cotizaciones.</td></tr>
+                    <tr><td colspan="7">No hay cotizaciones.</td></tr>
                 <?php else : ?>
                     <?php foreach ( $rows as $r ) : ?>
-                        <?php $share = SFC_BASE_PATH . '/product.php?product=' . rawurlencode( $r['product_slug'] ) . '&quote=' . rawurlencode( $r['share_token'] ); ?>
+                        <?php $share = SFC_BASE_PATH . '/quote.php?token=' . rawurlencode( $r['share_token'] ); ?>
                         <tr>
                             <td><strong><?php echo $h( $r['quote_number'] ); ?></strong></td>
                             <td><?php echo $h( $r['client_name'] ); ?></td>
-                            <td><?php echo $h( $r['product_slug'] ); ?></td>
+                            <td><?php echo $h( $r['title'] ?? '' ); ?></td>
+                            <td><?php echo (int) $r['item_count']; ?></td>
                             <td><?php echo $h( $r['currency'] . ' $' . number_format( (float) $r['total_price'], 2 ) ); ?></td>
                             <td><?php echo $h( substr( (string) $r['created_at'], 0, 10 ) ); ?></td>
                             <td class="adm-quotes__actions">

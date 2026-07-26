@@ -273,121 +273,73 @@
       SFC.events.postWithNonceRecovery(SFC.events.postAddToCart, onSuccess, showError);
     },
 
-    postSaveQuote: function () {
-      return $.post(SFC.data.ajaxUrl, {
-        action: 'sfc_save_quote',
-        nonce: SFC.data.nonce,
-        product_slug: SFC.data.productSlug,
-        state: JSON.stringify(SFC.state),
-        client_name: SFC.clientName || '',
-        client_email: SFC.clientEmail || '',
-      });
+    // Reflect a draft summary into the persistent draft bar.
+    updateDraftBar: function (summary) {
+      var $bar = $('#sfc-draft-bar');
+      if (!$bar.length || !summary) {
+        return;
+      }
+      var base = $bar.attr('data-base') || '';
+      $('#sfc-draft-count').text(summary.count);
+      $('#sfc-draft-total').text(
+        (summary.currency || 'USD') + ' $' + Number(summary.grandTotal || 0).toFixed(2)
+      );
+      if (summary.count > 0) {
+        $bar.removeClass('hidden');
+      } else {
+        $bar.addClass('hidden');
+      }
+      // (base kept for future use, e.g. rebuilding the CTA href)
+      void base;
     },
 
-    // Populate the client-name datalist once from existing clients.
-    loadClientNames: function () {
-      $.post(SFC.data.ajaxUrl, { action: 'sfc_client_names' })
-        .done(function (res) {
-          if (res && res.success && res.data && res.data.names) {
-            SFC.clientNames = res.data.names;
-            var opts = SFC.clientNames
-              .map(function (name) {
-                return '<option value="' + SFC.utils.esc(name) + '"></option>';
-              })
-              .join('');
-            $('#sfc-client-list').html(opts);
-          }
-        });
-    },
+    handleAddToQuote: function () {
+      if (!SFC.quote || SFC.isAddingToQuote) {
+        return;
+      }
+      SFC.isAddingToQuote = true;
 
-    handleClientNameInput: function () {
-      SFC.clientName = String($('#sfc-client-name').val() || '').trim();
-      $('#sfc-save-quote').prop('disabled', !SFC.quote || !SFC.clientName);
-    },
-
-    handleClientEmailInput: function () {
-      SFC.clientEmail = String($('#sfc-client-email').val() || '').trim();
-    },
-
-    showShareLink: function (url, quoteNumber) {
       var strings = SFC.strings;
       var esc = SFC.utils.esc;
-      var numberLine = '';
-      if (quoteNumber) {
-        var tpl = strings.quote_saved_number || 'Cotización {number} guardada';
-        numberLine =
-          '<span class="sfc__share-number">' +
-          esc(tpl.replace('{number}', quoteNumber)) +
-          '</span>';
-      }
-
-      $('#sfc-share-link').html(
-        numberLine +
-        '<span class="sfc__share-label">' +
-          esc(strings.quote_saved_share || 'Comparta este enlace:') +
-          '</span>' +
-          '<input type="text" readonly id="sfc-share-url" class="sfc__input sfc__share-input" value="' +
-          esc(url) +
-          '" />' +
-          '<span id="sfc-share-copied" class="sfc__share-copied" style="display:none;">' +
-          esc(strings.quote_saved_copied || '') +
-          '</span>'
-      );
-
-      if (window.navigator && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(
-          function () {
-            $('#sfc-share-copied').show();
-          },
-          function () {}
-        );
-      }
-    },
-
-    handleSaveQuote: function () {
-      if (!SFC.quote || SFC.isSavingQuote) {
-        return;
-      }
-      if (!SFC.clientName) {
-        SFC.quoteApi.showError(SFC.strings.client_required || 'Ingrese el nombre del cliente.');
-        $('#sfc-client-name').trigger('focus');
-        return;
-      }
-
-      SFC.isSavingQuote = true;
-      var $btn = $('#sfc-save-quote')
+      var $btn = $('#sfc-add-to-quote')
         .prop('disabled', true)
-        .text(SFC.strings.saving_quote || 'Guardando…');
+        .text(strings.adding_to_quote || 'Agregando…');
 
-      var finish = function () {
-        SFC.isSavingQuote = false;
-        $btn
-          .prop('disabled', !SFC.quote || !SFC.clientName)
-          .text(SFC.strings.save_quote || 'Guardar cotización');
+      var reset = function () {
+        SFC.isAddingToQuote = false;
+        $btn.prop('disabled', !SFC.quote).text(strings.add_to_quote || 'Agregar a la cotización');
       };
 
-      var showError = function (payload) {
-        SFC.quoteApi.showError(
-          (payload && payload.data && payload.data.message) ||
-            SFC.strings.quote_save_error ||
-            'No se pudo guardar la cotización.'
-        );
-        finish();
-      };
-
-      var onSuccess = function (res) {
-        if (res.data && res.data.url) {
-          SFC.events.showShareLink(res.data.url, res.data.quoteNumber);
-          if (SFC.clientName && SFC.clientNames.indexOf(SFC.clientName) === -1) {
-            SFC.clientNames.push(SFC.clientName);
+      $.post(SFC.data.ajaxUrl, {
+        action: 'sfc_quote_add_item',
+        product_slug: SFC.data.productSlug,
+        state: JSON.stringify(SFC.state),
+      })
+        .done(function (res) {
+          if (res && res.success) {
+            SFC.events.updateDraftBar(res.data);
+            var base = $('#sfc-draft-bar').attr('data-base') || '';
+            $('#sfc-add-confirm').html(
+              '<span class="sfc__added">' +
+                esc(strings.added_to_quote || 'Agregado a la cotización ✓') +
+                '</span> ' +
+                '<a class="sfc__added-link" href="' + esc(base) + '/">' +
+                esc(strings.view_quote || 'Ver cotización') +
+                '</a>'
+            );
+          } else {
+            SFC.quoteApi.showError(
+              (res && res.data && res.data.message) || 'No se pudo agregar el ítem.'
+            );
           }
-          finish();
-          return;
-        }
-        showError(res);
-      };
-
-      SFC.events.postWithNonceRecovery(SFC.events.postSaveQuote, onSuccess, showError);
+        })
+        .fail(function (xhr) {
+          SFC.quoteApi.showError(
+            (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) ||
+              'No se pudo agregar el ítem.'
+          );
+        })
+        .always(reset);
     },
 
     bind: function () {},
@@ -419,26 +371,9 @@
         SFC.events.handleCustomDimensionsInput();
       });
 
-      root.on('input', '#sfc-client-name', function () {
-        SFC.events.handleClientNameInput();
+      root.on('click', '#sfc-add-to-quote', function () {
+        SFC.events.handleAddToQuote();
       });
-
-      root.on('input', '#sfc-client-email', function () {
-        SFC.events.handleClientEmailInput();
-      });
-
-      root.on('click', '#sfc-add-to-cart', function () {
-        SFC.events.handleAddToCart();
-      });
-
-      root.on('click', '#sfc-save-quote', function () {
-        SFC.events.handleSaveQuote();
-      });
-
-      root.on('focus click', '#sfc-share-url', function () {
-        this.select();
-      });
-
     },
   };
 })(window, jQuery);

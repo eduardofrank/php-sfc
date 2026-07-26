@@ -175,3 +175,86 @@ html, body { margin: 0; padding: 0; }
   color: var(--sfc-text-muted);
   font-size: 0.8rem;
 }
+
+/* ---- Draft bar (persistent in-progress quote) ---- */
+.draft-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: 1180px; margin: 0 auto; padding: 10px 24px;
+  border-bottom: 1px solid var(--sfc-border);
+  background: color-mix(in oklch, var(--sfc-accent) 8%, var(--sfc-bg));
+  font-size: 0.92rem;
+}
+.draft-bar.hidden { display: none; }
+.draft-bar__label { color: var(--sfc-text-secondary); }
+.draft-bar__count { font-weight: 700; color: var(--sfc-accent); }
+.draft-bar__total { font-weight: 700; margin-left: auto; }
+.draft-bar__cta { color: var(--sfc-accent); text-decoration: none; font-weight: 600; }
+.draft-bar__cta:hover { text-decoration: underline; }
+
+/* ---- Builder (home) ---- */
+.builder { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 900px) { .builder { grid-template-columns: 1.4fr 1fr; align-items: start; } }
+.builder-alert { max-width: none; margin: 0 0 16px; }
+.builder__items, .builder__finalize {
+  background: var(--sfc-card); border: 1px solid var(--sfc-border); padding: 18px;
+}
+.builder__items-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.builder__items-head h2, .builder__finalize h2 { margin: 0; font-size: 1.15rem; }
+.builder__add { margin: 0; }
+.builder__empty { text-align: center; padding: 28px 12px; color: var(--sfc-text-secondary); }
+.builder__empty .sfc__btn { margin-top: 12px; }
+.builder__list { list-style: none; margin: 0; padding: 0; }
+.builder__row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--sfc-border);
+}
+.builder__label { flex: 1; }
+.builder__line-total { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.builder__remove { margin: 0; }
+.builder__grand {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 0 4px; margin-top: 6px; border-top: 2px solid var(--sfc-border-hi);
+  font-size: 1.1rem;
+}
+.builder__grand strong { color: var(--sfc-accent); }
+.builder__clear { margin: 10px 0 0; }
+.builder__clear-btn {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--sfc-text-muted); text-decoration: underline; font: inherit; font-size: 0.85rem;
+}
+.builder__finalize .sfc__field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.builder__finalize-btn { width: 100%; }
+
+/* ---- Quote document ---- */
+.quote-doc {
+  background: var(--sfc-card); border: 1px solid var(--sfc-border);
+  padding: 28px; max-width: 820px; margin: 0 auto;
+}
+.quote-doc__head { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--sfc-border); padding-bottom: 16px; }
+.quote-doc__number { margin: 0; font-size: 1.5rem; }
+.quote-doc__title { margin: 4px 0 0; color: var(--sfc-text-secondary); }
+.quote-doc__meta { margin: 0; display: grid; gap: 4px; }
+.quote-doc__meta div { display: flex; gap: 8px; }
+.quote-doc__meta dt { color: var(--sfc-text-muted); min-width: 64px; }
+.quote-doc__meta dd { margin: 0; }
+.quote-doc__items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+.quote-doc__items th, .quote-doc__items td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--sfc-border); vertical-align: top; }
+.quote-doc__items thead th { color: var(--sfc-text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.quote-doc__amount { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.quote-doc__item-label { display: block; }
+.quote-doc__item-open { font-size: 0.82rem; color: var(--sfc-accent); text-decoration: none; }
+.quote-doc__item-open:hover { text-decoration: underline; }
+.quote-doc__total-label { text-align: right; font-weight: 700; }
+.quote-doc__grand { font-weight: 700; font-size: 1.15rem; color: var(--sfc-accent); }
+.quote-doc__notes { margin-top: 18px; }
+.quote-doc__notes h2 { font-size: 1rem; margin: 0 0 6px; }
+.quote-doc__notes p { margin: 0; color: var(--sfc-text-secondary); }
+.quote-doc__foot { margin-top: 22px; color: var(--sfc-text-muted); font-size: 0.82rem; }
+.app-header__actions { display: flex; gap: 16px; align-items: center; }
+
+@media print {
+  .app-header--print-hide, .app-footer, .draft-bar { display: none !important; }
+  .app-body { background: #fff; color: #000; }
+  .quote-doc { border: 0; background: #fff; color: #000; max-width: none; padding: 0; }
+  .quote-doc__number, .quote-doc__grand, .quote-doc__meta dd { color: #000; }
+}

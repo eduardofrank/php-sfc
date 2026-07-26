@@ -751,3 +751,9 @@
   color: var(--sfc-accent);
   margin-bottom: 4px;
 }
+
+/* Add-to-quote confirmation in the calculator panel */
+.sfc__add-confirm { margin-top: 10px; min-height: 1.2em; }
+.sfc__added { color: var(--sfc-success); font-weight: 600; }
+.sfc__added-link { color: var(--sfc-accent); text-decoration: none; margin-left: 6px; }
+.sfc__added-link:hover { text-decoration: underline; }

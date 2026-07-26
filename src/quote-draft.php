@@ -121,6 +121,57 @@ function sfc_draft_clear() {
 }
 
 /**
+ * Finalize the current draft into a numbered, frozen DB quote. Re-prices every
+ * item at this moment (issue-time freeze), then clears the draft.
+ *
+ * @param string $client_name Required client name.
+ * @param string $client_email Optional email.
+ * @param string $title       Optional quote title.
+ * @param string $notes       Optional quote notes.
+ * @return array<string,mixed>|WP_Error Row {quoteNumber, shareToken, total, ...} or error.
+ */
+function sfc_draft_finalize( $client_name, $client_email = '', $title = '', $notes = '' ) {
+    $client_name = trim( (string) $client_name );
+    if ( '' === $client_name ) {
+        return new WP_Error( 'client_required', 'Ingrese el nombre del cliente.' );
+    }
+
+    $draft = sfc_draft_get();
+    if ( empty( $draft ) ) {
+        return new WP_Error( 'empty_draft', 'La cotización no tiene ítems.' );
+    }
+
+    $items = array();
+    foreach ( $draft as $draft_item ) {
+        $slug  = $draft_item['productSlug'];
+        $state = $draft_item['state'];
+        $quote = sfc_calculate_product_quote( $slug, $state );
+        if ( is_wp_error( $quote ) ) {
+            return new WP_Error( 'item_invalid', 'Un ítem ya no es válido: ' . $quote->get_error_message() );
+        }
+        $items[] = array(
+            'productSlug' => $slug,
+            'state'       => isset( $quote['state'] ) && is_array( $quote['state'] ) ? $quote['state'] : $state,
+            'snapshot'    => $quote,
+            'lineTotal'   => (float) $quote['totalPrice'],
+            'currency'    => (string) ( $quote['currency'] ?? 'USD' ),
+            'label'       => sfc_draft_item_label( $slug, $state, $quote ),
+        );
+    }
+
+    try {
+        $client_id = sfc_quotes_find_or_create_client( $client_name, $client_email );
+        $row       = sfc_quotes_create_from_draft( $client_id, $items, trim( (string) $title ), trim( (string) $notes ) );
+    } catch ( Throwable $e ) {
+        error_log( 'sfc_draft_finalize failed: ' . $e->getMessage() );
+        return new WP_Error( 'finalize_failed', 'No se pudo generar la cotización.' );
+    }
+
+    sfc_draft_clear();
+    return $row;
+}
+
+/**
  * Compact summary for the builder, draft bar, and API responses.
  *
  * @return array{count:int,grandTotal:float,currency:string,items:array<int,array<string,mixed>>}

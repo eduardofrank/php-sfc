@@ -12,7 +12,5 @@
   window.SFC.quoteRequestId = 0;
   window.SFC.isAdding = false;
   window.SFC.isSavingQuote = false;
-  window.SFC.clientName = '';
-  window.SFC.clientEmail = '';
-  window.SFC.clientNames = [];
+  window.SFC.isAddingToQuote = false;
 })(window);
