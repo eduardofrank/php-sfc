@@ -68,43 +68,73 @@ function sfc_quotes_next_number() {
 }
 
 /**
- * Persist a priced quote. The number and price are frozen at this moment.
+ * Persist a compound quote from a set of draft items. The number and every line
+ * price are frozen at this moment.
  *
- * @param string              $slug         Product slug.
- * @param array<string,mixed> $state        Normalized calculator state.
- * @param array<string,mixed> $quote_result Full result from sfc_calculate_product_quote().
- * @param int                 $client_id    Client id.
+ * @param int                             $client_id Client id.
+ * @param array<int,array<string,mixed>>  $items     Draft items (see src/quote-draft.php).
+ * @param string                          $title     Optional quote title.
+ * @param string                          $notes     Optional quote notes.
  * @return array{id:int,quoteNumber:string,shareToken:string,total:float,currency:string}
  */
-function sfc_quotes_create( $slug, $state, $quote_result, $client_id ) {
+function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes = '' ) {
+    if ( empty( $items ) ) {
+        throw new RuntimeException( 'Cannot create a quote with no items.' );
+    }
+
     $pdo   = sfc_db();
     $token = bin2hex( random_bytes( 12 ) );
-    $total = (float) ( $quote_result['totalPrice'] ?? 0 );
-    $curr  = (string) ( $quote_result['currency'] ?? 'USD' );
+    $total = 0.0;
+    foreach ( $items as $item ) {
+        $total += (float) $item['lineTotal'];
+    }
+    $total = round( $total, 2 );
+    $curr  = (string) ( $items[0]['currency'] ?? 'USD' );
 
     $pdo->beginTransaction();
     try {
         $number = sfc_quotes_next_number();
-        $stmt   = $pdo->prepare(
+
+        $head = $pdo->prepare(
             'INSERT INTO sfc_quotes
-                (quote_number, share_token, client_id, product_slug, state, snapshot, total_price, currency)
+                (quote_number, share_token, client_id, total_price, currency, title, notes)
              VALUES
-                (:number, :token, :client, :slug, :state, :snapshot, :total, :currency)
+                (:number, :token, :client, :total, :currency, :title, :notes)
              RETURNING id'
         );
-        $stmt->execute(
+        $head->execute(
             array(
                 ':number'   => $number,
                 ':token'    => $token,
                 ':client'   => $client_id,
-                ':slug'     => $slug,
-                ':state'    => wp_json_encode_compat( $state ),
-                ':snapshot' => wp_json_encode_compat( $quote_result ),
                 ':total'    => number_format( $total, 2, '.', '' ),
                 ':currency' => $curr,
+                ':title'    => '' === $title ? null : $title,
+                ':notes'    => '' === $notes ? null : $notes,
             )
         );
-        $id = (int) $stmt->fetchColumn();
+        $quote_id = (int) $head->fetchColumn();
+
+        $line = $pdo->prepare(
+            'INSERT INTO sfc_quote_items
+                (quote_id, position, product_slug, state, snapshot, line_total, label)
+             VALUES
+                (:quote, :pos, :slug, :state, :snapshot, :total, :label)'
+        );
+        foreach ( array_values( $items ) as $pos => $item ) {
+            $line->execute(
+                array(
+                    ':quote'    => $quote_id,
+                    ':pos'      => $pos,
+                    ':slug'     => $item['productSlug'],
+                    ':state'    => wp_json_encode_compat( $item['state'] ),
+                    ':snapshot' => wp_json_encode_compat( $item['snapshot'] ),
+                    ':total'    => number_format( (float) $item['lineTotal'], 2, '.', '' ),
+                    ':label'    => $item['label'],
+                )
+            );
+        }
+
         $pdo->commit();
     } catch ( Throwable $e ) {
         $pdo->rollBack();
@@ -112,7 +142,7 @@ function sfc_quotes_create( $slug, $state, $quote_result, $client_id ) {
     }
 
     return array(
-        'id'          => $id,
+        'id'          => $quote_id,
         'quoteNumber' => $number,
         'shareToken'  => $token,
         'total'       => $total,
@@ -121,30 +151,43 @@ function sfc_quotes_create( $slug, $state, $quote_result, $client_id ) {
 }
 
 /**
- * Load a quote by its public share token, with client fields joined.
+ * Load a quote header (with client) and its line items by public share token.
  *
  * @param string $token Share token.
- * @return array<string,mixed>|null
+ * @return array<string,mixed>|null Header fields plus 'items' => [ ... ].
  */
 function sfc_quotes_get_by_token( $token ) {
     if ( ! preg_match( '/^[a-f0-9]{24}$/', (string) $token ) ) {
         return null;
     }
 
-    $stmt = sfc_db()->prepare(
+    $pdo  = sfc_db();
+    $stmt = $pdo->prepare(
         'SELECT q.*, c.name AS client_name, c.email AS client_email
          FROM sfc_quotes q JOIN sfc_clients c ON c.id = q.client_id
          WHERE q.share_token = :token LIMIT 1'
     );
     $stmt->execute( array( ':token' => $token ) );
-    $row = $stmt->fetch();
-    if ( ! $row ) {
+    $head = $stmt->fetch();
+    if ( ! $head ) {
         return null;
     }
 
-    $row['state']    = json_decode( (string) $row['state'], true ) ?: array();
-    $row['snapshot'] = json_decode( (string) $row['snapshot'], true ) ?: array();
-    return $row;
+    $items_stmt = $pdo->prepare(
+        'SELECT id, position, product_slug, state, snapshot, line_total, label
+         FROM sfc_quote_items WHERE quote_id = :qid ORDER BY position'
+    );
+    $items_stmt->execute( array( ':qid' => $head['id'] ) );
+
+    $items = array();
+    foreach ( $items_stmt->fetchAll() as $row ) {
+        $row['state']    = json_decode( (string) $row['state'], true ) ?: array();
+        $row['snapshot'] = json_decode( (string) $row['snapshot'], true ) ?: array();
+        $items[]         = $row;
+    }
+    $head['items'] = $items;
+
+    return $head;
 }
 
 /**
@@ -184,8 +227,9 @@ function sfc_quotes_filter_sql( $filters ) {
 function sfc_quotes_list( $filters = array(), $limit = 25, $offset = 0 ) {
     list( $where, $params ) = sfc_quotes_filter_sql( $filters );
 
-    $sql = 'SELECT q.id, q.quote_number, q.share_token, q.product_slug, q.total_price,
-                   q.currency, q.status, q.created_at, c.name AS client_name
+    $sql = 'SELECT q.id, q.quote_number, q.share_token, q.title, q.total_price,
+                   q.currency, q.status, q.created_at, c.name AS client_name,
+                   (SELECT COUNT(*) FROM sfc_quote_items i WHERE i.quote_id = q.id) AS item_count
             FROM sfc_quotes q JOIN sfc_clients c ON c.id = q.client_id'
         . $where
         . ' ORDER BY q.created_at DESC LIMIT :limit OFFSET :offset';

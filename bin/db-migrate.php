@@ -44,6 +44,33 @@ CREATE TABLE IF NOT EXISTS sfc_quote_counters (
     year     INT PRIMARY KEY,
     last_seq INT NOT NULL
 );
+
+-- Compound quotes: sfc_quotes becomes the header; line items live here.
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE sfc_quotes ALTER COLUMN product_slug DROP NOT NULL;
+ALTER TABLE sfc_quotes ALTER COLUMN state        DROP NOT NULL;
+ALTER TABLE sfc_quotes ALTER COLUMN snapshot     DROP NOT NULL;
+
+CREATE TABLE IF NOT EXISTS sfc_quote_items (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    quote_id     BIGINT NOT NULL REFERENCES sfc_quotes(id) ON DELETE CASCADE,
+    position     INT NOT NULL DEFAULT 0,
+    product_slug TEXT NOT NULL,
+    state        JSONB NOT NULL,
+    snapshot     JSONB NOT NULL,
+    line_total   NUMERIC(12,2) NOT NULL,
+    label        TEXT NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS sfc_quote_items_quote ON sfc_quote_items (quote_id, position);
+
+-- Backfill legacy single-product quotes as one line item each.
+INSERT INTO sfc_quote_items (quote_id, position, product_slug, state, snapshot, line_total, label)
+SELECT q.id, 0, q.product_slug, q.state, q.snapshot, q.total_price, q.product_slug
+FROM sfc_quotes q
+WHERE q.product_slug IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM sfc_quote_items i WHERE i.quote_id = q.id);
 SQL;
 
 try {

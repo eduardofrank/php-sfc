@@ -204,14 +204,26 @@ function sfc_app_base_url() {
 }
 
 /**
- * Absolute shareable URL that reopens a saved quote.
+ * Absolute shareable URL for a finalized quote document.
  *
- * @param string $slug Product slug.
- * @param string $id   Quote id.
+ * @param string $token Quote share token.
  * @return string
  */
-function sfc_app_share_url( $slug, $id ) {
-    return sfc_app_base_url() . SFC_BASE_PATH . '/product.php?product=' . rawurlencode( $slug ) . '&quote=' . rawurlencode( $id );
+function sfc_app_quote_url( $token ) {
+    return sfc_app_base_url() . SFC_BASE_PATH . '/quote.php?token=' . rawurlencode( $token );
+}
+
+/**
+ * Root-relative URL that opens one item of a saved quote back in the calculator.
+ *
+ * @param string $slug  Product slug.
+ * @param string $token Quote share token.
+ * @param int    $pos   Item position.
+ * @return string
+ */
+function sfc_app_item_calc_url( $slug, $token, $pos ) {
+    return SFC_BASE_PATH . '/product.php?product=' . rawurlencode( $slug )
+        . '&from=' . rawurlencode( $token ) . '&item=' . (int) $pos;
 }
 
 /**
