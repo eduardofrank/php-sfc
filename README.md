@@ -30,42 +30,47 @@ re-prices it and never trusts a client-supplied total).
 
 ## Architecture
 
+The app is **quote-centric**: the primary object is a Quote (client, number, line
+items, totals); products are how you add items to it.
+
 | Path | Role |
 |------|------|
-| `index.php` | Landing page — the ten products as the first choice |
-| `product.php` | Per-product calculator + folded-brochure hub (`?product=`, `?fold=`, `?quote=`) |
-| `api/index.php` | JSON router: `sfc_calculate_product_quote`, `sfc_save_quote`, `sfc_client_names` |
-| `bootstrap.php` | Constants + shim + engine load order |
-| `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→store, …) |
-| `src/includes/` | Pricing/config/steps engine, ported verbatim from the plugin |
-| `src/app-helpers.php` | Quote seeding, landing list, JSON envelopes, legacy file save/share |
+| `index.php` | **Quote builder** (home) — the current draft, client + title/notes, Finalize |
+| `products.php` | Product picker — "add an item" (the ten-product grid) |
+| `product.php` | Per-product calculator; primary action **Add to quote** (`?from=&item=` seeds a saved item) |
+| `quote.php` | Read-only, printable **quote document** (`?token=`) |
+| `api/index.php` | JSON router: `sfc_calculate_product_quote`, `sfc_quote_add_item`/`remove_item`/`clear`/`draft`, `sfc_finalize_quote`, `sfc_client_names` |
+| `src/quote-draft.php` | Server-session draft basket + `sfc_draft_finalize()` |
+| `src/quotes-repo.php` | Clients + quote header/items data access |
 | `src/db.php` | PostgreSQL PDO connection (env → `data/config/db.php` → DDEV defaults) |
-| `src/quotes-repo.php` | Clients + quotes data access (create, reopen, list, delete) |
+| `src/includes/` | Pricing/config/steps engine, ported verbatim from the plugin |
+| `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→store, …) |
 | `admin/` | Password-protected price maintenance + quote browser |
-| `assets/calculator.css` | Calculator styles (ported verbatim — `.sfc` dark theme) |
 | `assets/js/` | Declarative calculator front-end (jQuery, ported) |
-| `data/quotes/` | Legacy file-based shares (gitignored); superseded by the database |
 
 The engine is ported behind a shim rather than rewritten, so quotes are
 penny-identical to the plugin. `get_option()` reads the JSON options store
 (default price tables, rates, sheet specs), so pricing needs no database.
 
-## Saved quotes (PostgreSQL)
+## Compound quotes (PostgreSQL)
 
-Saving a quote is a real, durable record — not just a share link. Each save
-captures a **client** (reusable, case-insensitive), a **quote number**
-(`YYYY-NNNN`, per-year), the calculator **state**, and a **frozen priced
-snapshot**, so a quote number represents a fixed, dated price even if prices
-change later. Reopening `product.php?quote=<token>` shows a frozen-price banner
-above the live calculator.
+A quote is a **document with one or more line items** — the same product more than
+once and/or different products — under one client, one number, one grand total.
 
-- Schema (`sfc_clients`, `sfc_quotes`, `sfc_quote_counters`) is created by
-  `bin/db-migrate.php` (idempotent).
+Flow: **Add to quote** on any calculator collects items into a server-session
+**draft** (the persistent draft bar shows the running count + total); the **builder
+home** captures the **client** (reusable, case-insensitive) plus optional **title +
+notes** and **Finalizes** into a numbered quote. Each item's price is **frozen at
+finalize** (`YYYY-NNNN`, per-year number), so the document is a fixed, dated quote.
+
+- Schema: header `sfc_quotes` + `sfc_quote_items` + `sfc_clients` +
+  `sfc_quote_counters`, created by `bin/db-migrate.php` (idempotent; backfills any
+  legacy single quotes to one item).
 - Connection resolves from `SFC_DB_*` env → gitignored `data/config/db.php` →
   DDEV defaults (`src/db.php`). Local dev uses DDEV's bundled Postgres 15.
-- `/admin/quotes.php` browses, searches, reopens, and deletes quotes.
-- Data access lives in `src/quotes-repo.php`; the API path is `sfc_save_quote`
-  in `api/index.php` (re-prices server-side; never trusts a client total).
+- `quote.php?token=` is the shareable/printable document; `/admin/quotes.php`
+  browses, searches, and deletes quotes. The server re-prices on add and finalize
+  and never trusts a client-supplied total.
 
 ## Maintaining prices
 
