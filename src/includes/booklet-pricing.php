@@ -658,6 +658,10 @@ function sfc_calculate_booklet_quote( $slug, $state ) {
         return $cover_pricing;
     }
 
+    // Print cost (inner + cover) before cover lamination — job services bill on this.
+    $print_base = (float) ( $inner_pricing['totalPrice'] ?? 0 )
+        + (float) ( $cover_pricing['totalPrice'] ?? 0 );
+
     $cover_pricing = sfc_apply_booklet_cover_lamination(
         $state,
         $cover_pricing,
@@ -673,7 +677,7 @@ function sfc_calculate_booklet_quote( $slug, $state ) {
     $pricing      = sfc_merge_booklet_pricing( $inner_pricing, $cover_pricing, $total_sheets );
 
     $job_services = (array) ( $product['jobServices'] ?? array( 'stapling' ) );
-    $pricing      = sfc_apply_job_service_pricing( $pricing, $total_sheets, $job_services );
+    $pricing      = sfc_apply_job_service_pricing( $pricing, $total_sheets, $job_services, $print_base );
 
     $pricing = sfc_apply_turnaround_surcharge( $product, $state, $pricing );
     $pricing = sfc_apply_trade_pricing( $pricing, $total_sheets );
