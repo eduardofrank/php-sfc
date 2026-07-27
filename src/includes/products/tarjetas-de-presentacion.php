@@ -19,17 +19,16 @@ function sfc_get_tarjetas_de_presentacion_product_config() {
         'defaultQuantity' => 100,
         'sizes'           => array(
             '90x50' => array(
-                'label'          => array(
+                'label'         => array(
                     'en' => '90 × 50 mm',
                     'es' => '90 × 50 mm',
                 ),
-                'widthMm'        => 90,
-                'heightMm'       => 50,
-                'unitsPerSheet'  => 20,
-                'impositionCols' => 4,
-                'impositionRows' => 5,
-                // 20-up is intentional: max auto fit is 24-up, but 100 cards at 24-up
-                // needs five sheets with 20 wasted slots; 20-up uses five sheets with zero waste.
+                'widthMm'       => 90,
+                'heightMm'      => 50,
+                // 24 cards per press sheet (rotated 8 × 3). Sheet count is
+                // ceil(quantity / 24); cols/rows are left to auto-imposition so
+                // the layout preview reflects the rotated 24-up arrangement.
+                'unitsPerSheet' => 24,
             ),
             '80x50' => array(
                 'label'          => array(
@@ -72,6 +71,12 @@ function sfc_get_tarjetas_de_presentacion_product_config() {
             ),
         ),
         'finishes'        => array(
+            'none' => array(
+                'label' => array(
+                    'en' => 'None',
+                    'es' => 'Ninguno',
+                ),
+            ),
             'matte_laminate'  => array(
                 'label' => array(
                     'en' => 'Matte laminate',
