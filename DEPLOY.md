@@ -1,8 +1,8 @@
 # Deploying to Apache (shared server, project subdirectory)
 
-The whole app lives in one directory (`index.php`, `product.php`, `admin/`,
-`api/`, `assets/`, plus `bootstrap.php`, `wp-shims.php`, `src/`, `data/`). No
-Composer, just PHP 8.x with the `pdo_pgsql` extension. Saved quotes are stored in
+The whole app lives in one directory (`index.php`, `products.php`, `product.php`,
+`quote.php`, `admin/`, `api/`, `assets/`, plus `bootstrap.php`, `wp-shims.php`,
+`src/`, `data/`). No Composer, just PHP 8.x with the `pdo_pgsql` extension. Saved quotes are stored in
 **PostgreSQL** (step 4); the calculator and pricing work without it — only the
 Save/quote-tracking feature needs the database.
 
@@ -93,7 +93,7 @@ Create the schema (idempotent — safe to re-run on every deploy):
 
 ```bash
 cd /var/www/localhost/htdocs/php-sfc
-php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_quote_counters, sfc_quotes"
+php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_quote_counters, sfc_quote_items, sfc_quotes"
 ```
 
 ## 5. Make sure `.htaccess` overrides are allowed

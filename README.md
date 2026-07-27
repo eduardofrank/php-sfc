@@ -1,12 +1,14 @@
 # Lab Gráfico — standalone PHP calculator
 
-A web-based print-pricing calculator for ten sheet-fed products. The user first
-picks a product; the app then forks to that product's calculator and prices the
-job server-side in PHP. It is a faithful standalone reimplementation of the
-`sheet-fed-calc` WordPress/WooCommerce plugin, minus the WooCommerce, admin, and
-artwork machinery.
+A web-based print-pricing tool for ten sheet-fed products. You build a **quote**
+by adding one or more products — each configured in its own calculator — then
+finalize it into a numbered, client-ready document. Pricing runs server-side in
+PHP, ported faithfully from the `sheet-fed-calc` WordPress/WooCommerce plugin
+(minus the WooCommerce cart/checkout and artwork; the price/quote admin here is
+this app's own).
 
-Everything is in millimeters and USD. UI language is Spanish.
+Everything is in millimeters and USD. UI language is Spanish; the interface is
+branded **Lab Gráfico**.
 
 ## How it works
 
@@ -45,8 +47,10 @@ items, totals); products are how you add items to it.
 | `src/db.php` | PostgreSQL PDO connection (env → `data/config/db.php` → DDEV defaults) |
 | `src/includes/` | Pricing/config/steps engine, ported verbatim from the plugin |
 | `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→store, …) |
+| `src/app-helpers.php` | Landing/picker list, share + item URLs, JSON envelopes |
 | `admin/` | Password-protected price maintenance + quote browser |
 | `assets/js/` | Declarative calculator front-end (jQuery, ported) |
+| `assets/quote-ui.css` + `assets/fonts/` | Lab Gráfico visual layer (self-hosted Space Grotesk/Mono) for builder, picker, calculator, quote document |
 
 The engine is ported behind a shim rather than rewritten, so quotes are
 penny-identical to the plugin. `get_option()` reads the JSON options store
