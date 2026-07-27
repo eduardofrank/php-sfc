@@ -76,7 +76,9 @@ function sfc_admin_save_generic( $option, $raw, $sanitizer, $success ) {
     if ( is_wp_error( $clean ) ) {
         return array( 'ok' => false, 'message' => $clean->get_error_message() );
     }
-    update_option( $option, $clean );
+    if ( ! update_option( $option, $clean ) ) {
+        return array( 'ok' => false, 'message' => sfc_admin_write_error() );
+    }
     return array( 'ok' => true, 'message' => $success );
 }
 
@@ -145,9 +147,22 @@ function sfc_admin_save_sheet() {
         return array( 'ok' => false, 'message' => $gap->get_error_message() );
     }
 
-    update_option( 'sfc_sheet_specs', $specs );
-    update_option( 'sfc_sheet_imposition_gap_mm', $gap );
+    if ( ! update_option( 'sfc_sheet_specs', $specs )
+        || ! update_option( 'sfc_sheet_imposition_gap_mm', $gap ) ) {
+        return array( 'ok' => false, 'message' => sfc_admin_write_error() );
+    }
     return array( 'ok' => true, 'message' => 'Dimensiones de hoja guardadas.' );
+}
+
+/**
+ * Message shown when a settings write fails (almost always a filesystem
+ * permission problem on the server).
+ *
+ * @return string
+ */
+function sfc_admin_write_error() {
+    return 'No se pudo guardar. Verifique que el servidor web pueda escribir en '
+        . 'data/config/options.json (permisos de data/config/).';
 }
 
 /**
@@ -207,14 +222,17 @@ function sfc_admin_save_fulfillment() {
  * @return array{ok:bool,message:string}
  */
 function sfc_admin_reset_defaults() {
-    update_option( 'sfc_price_tables', sfc_get_default_price_tables() );
-    update_option( 'sfc_quantity_tiers', sfc_get_default_quantity_tiers() );
-    update_option( 'sfc_sheet_specs', sfc_get_default_sheet_specs() );
-    update_option( 'sfc_sheet_imposition_gap_mm', sfc_get_default_sheet_imposition_gap_mm() );
-    update_option( 'sfc_job_service_rates', sfc_get_default_job_service_rates() );
-    update_option( 'sfc_die_cut_rates', sfc_get_default_die_cut_rates() );
-    update_option( 'sfc_turnaround_rates', sfc_get_default_turnaround_rates() );
-    update_option( 'sfc_paper_catalog', sfc_get_default_paper_catalog() );
-    update_option( 'sfc_fulfillment_settings', sfc_get_default_fulfillment_settings() );
+    $ok = update_option( 'sfc_price_tables', sfc_get_default_price_tables() )
+        && update_option( 'sfc_quantity_tiers', sfc_get_default_quantity_tiers() )
+        && update_option( 'sfc_sheet_specs', sfc_get_default_sheet_specs() )
+        && update_option( 'sfc_sheet_imposition_gap_mm', sfc_get_default_sheet_imposition_gap_mm() )
+        && update_option( 'sfc_job_service_rates', sfc_get_default_job_service_rates() )
+        && update_option( 'sfc_die_cut_rates', sfc_get_default_die_cut_rates() )
+        && update_option( 'sfc_turnaround_rates', sfc_get_default_turnaround_rates() )
+        && update_option( 'sfc_paper_catalog', sfc_get_default_paper_catalog() )
+        && update_option( 'sfc_fulfillment_settings', sfc_get_default_fulfillment_settings() );
+    if ( ! $ok ) {
+        return array( 'ok' => false, 'message' => sfc_admin_write_error() );
+    }
     return array( 'ok' => true, 'message' => 'Se restauraron todos los valores por defecto.' );
 }

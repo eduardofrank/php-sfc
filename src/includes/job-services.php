@@ -82,5 +82,12 @@ function sfc_apply_product_addon_pricing( $product, $state, $pricing, $sheet_qua
 
     $pricing = sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity );
 
-    return sfc_apply_job_service_pricing( $pricing, $sheet_quantity );
+    // Job services are per-product: a flat product is only cut unless its config
+    // declares otherwise (e.g. folded brochures also crease). Products that do not
+    // fold must not be charged the creasing rate.
+    $services = ( isset( $product['jobServices'] ) && is_array( $product['jobServices'] ) )
+        ? $product['jobServices']
+        : array( 'cutting' );
+
+    return sfc_apply_job_service_pricing( $pricing, $sheet_quantity, $services );
 }

@@ -14,6 +14,8 @@ function sfc_get_folded_product_shared_options() {
         'minQuantity'          => 1,
         'emptyDefaultQuantity' => true,
         'requireSelection'     => array( 'paper', 'finish' ),
+        // Folded brochures are cut and folded, so they incur both services.
+        'jobServices'          => array( 'cutting', 'creasing' ),
         'customDimensionLimits' => array(
             'minWidthMm'  => 50,
             'minHeightMm' => 50,
