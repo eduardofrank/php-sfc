@@ -27,7 +27,7 @@ $page_title = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotizació
 require __DIR__ . '/src/partials/head.php';
 ?>
 <header class="app-header app-header--print-hide">
-    <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
+    <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Lab&nbsp;Gráfico</a>
     <?php if ( $quote ) : ?>
         <div class="app-header__actions">
             <button type="button" class="app-header__back" onclick="window.print()">Imprimir</button>

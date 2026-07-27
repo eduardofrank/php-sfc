@@ -3,7 +3,7 @@
  * Standalone app bootstrap.
  *
  * Defines the constants the ported engine expects, loads the WordPress shim
- * layer, then requires the ported Sheet Fed Calc engine files in dependency
+ * layer, then requires the ported Lab Gráfico engine files in dependency
  * order (mirroring the original plugin's load order). Every entry point
  * (index.php, product.php, api/index.php) includes this single file.
  */

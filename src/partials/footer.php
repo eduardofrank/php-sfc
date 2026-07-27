@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <footer class="app-footer">
-    <p>Sheet Fed Calc — calculadora de impresión pliego a pliego. Precios en USD.</p>
+    <p>Lab Gráfico — calculadora de impresión con precios en USD.</p>
 </footer>
 </body>
 </html>

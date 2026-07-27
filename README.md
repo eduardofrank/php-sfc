@@ -1,4 +1,4 @@
-# Sheet Fed Calc — standalone PHP calculator
+# Lab Gráfico — standalone PHP calculator
 
 A web-based print-pricing calculator for ten sheet-fed products. The user first
 picks a product; the app then forks to that product's calculator and prices the

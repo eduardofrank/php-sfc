@@ -14,7 +14,7 @@ $b          = SFC_BASE_PATH;
 require __DIR__ . '/src/partials/head.php';
 ?>
 <header class="app-header">
-    <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
+    <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Lab&nbsp;Gráfico</a>
     <a class="app-header__back" href="<?php echo esc_attr( $b ); ?>/">← Cotización</a>
 </header>
 

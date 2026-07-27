@@ -2,7 +2,7 @@
 /**
  * Minimal WordPress compatibility shims.
  *
- * The Sheet Fed Calc pricing engine was written as a WordPress plugin. This
+ * The Lab Gráfico pricing engine was written as a WordPress plugin. This
  * standalone app ports those engine files verbatim and satisfies the small set
  * of WordPress primitives they touch with the lightweight implementations below.
  * There is no database: get_option() always returns the seeded default, so the

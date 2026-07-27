@@ -36,13 +36,13 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mantenimiento de precios · Sheet Fed Calc</title>
+    <title>Mantenimiento de precios · Lab Gráfico</title>
     <link rel="stylesheet" href="<?php echo $h( SFC_BASE_PATH ); ?>/assets/admin.css">
 </head>
 <body class="adm-body">
 <header class="adm-header">
     <div>
-        <strong>Sheet Fed Calc</strong> · Mantenimiento de precios
+        <strong>Lab Gráfico</strong> · Mantenimiento de precios
     </div>
     <nav class="adm-nav">
         <a href="quotes.php">Cotizaciones</a>

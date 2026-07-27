@@ -1,4 +1,4 @@
-/* Sheet Fed Calc — standalone page shell.
+/* Lab Gráfico — standalone page shell.
    Mirrors the calculator's .sfc dark-theme tokens so the whole site reads as
    one surface. Values are kept in sync with assets/calculator.css. */
 
@@ -258,3 +258,6 @@ html, body { margin: 0; padding: 0; }
   .quote-doc { border: 0; background: #fff; color: #000; max-width: none; padding: 0; }
   .quote-doc__number, .quote-doc__grand, .quote-doc__meta dd { color: #000; }
 }
+
+.builder__actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+.builder__actions .builder__clear { margin: 0; }

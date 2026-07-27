@@ -32,7 +32,7 @@ if ( ! is_dir( $dir ) ) {
 }
 
 $contents = "<?php\n"
-    . "// Admin password hash for Sheet Fed Calc. Gitignored. Do not serve.\n"
+    . "// Admin password hash for Lab Gráfico. Gitignored. Do not serve.\n"
     . "if ( ! defined( 'ABSPATH' ) ) { exit; }\n"
     . 'return ' . var_export( $hash, true ) . ";\n";
 

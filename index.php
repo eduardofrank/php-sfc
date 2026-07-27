@@ -59,7 +59,7 @@ $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 
 require __DIR__ . '/src/partials/head.php';
 ?>
 <header class="app-header">
-    <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
+    <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Lab&nbsp;Gráfico</a>
     <a class="app-header__back" href="<?php echo $h( $b ); ?>/admin/quotes.php">Cotizaciones guardadas</a>
 </header>
 
@@ -75,11 +75,6 @@ require __DIR__ . '/src/partials/head.php';
 
     <div class="builder">
         <section class="builder__items">
-            <div class="builder__items-head">
-                <h2>Ítems</h2>
-                <a class="sfc__btn builder__add" href="<?php echo $h( $b ); ?>/products.php">+ Añadir producto</a>
-            </div>
-
             <?php if ( $draft['count'] < 1 ) : ?>
                 <div class="builder__empty">
                     <p>Aún no has agregado productos a esta cotización.</p>
@@ -103,10 +98,13 @@ require __DIR__ . '/src/partials/head.php';
                     <span>Total</span>
                     <strong><?php echo $h( $draft['currency'] . ' $' . number_format( $draft['grandTotal'], 2 ) ); ?></strong>
                 </div>
-                <form method="post" class="builder__clear">
-                    <input type="hidden" name="do" value="clear">
-                    <button type="submit" class="builder__clear-btn">Vaciar cotización</button>
-                </form>
+                <div class="builder__actions">
+                    <a class="sfc__btn builder__add" href="<?php echo $h( $b ); ?>/products.php">+ Añadir producto</a>
+                    <form method="post" class="builder__clear">
+                        <input type="hidden" name="do" value="clear">
+                        <button type="submit" class="builder__clear-btn">Vaciar cotización</button>
+                    </form>
+                </div>
             <?php endif; ?>
         </section>
 

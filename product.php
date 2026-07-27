@@ -64,7 +64,7 @@ require __DIR__ . '/src/partials/head.php';
 $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
 ?>
 <header class="app-header">
-    <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Sheet&nbsp;Fed&nbsp;Calc</a>
+    <a class="app-header__brand" href="<?php echo esc_attr( $b ); ?>/">Lab&nbsp;Gráfico</a>
     <a class="app-header__back" href="<?php echo esc_attr( $b ); ?>/products.php">← Elegir otro producto</a>
 </header>
 

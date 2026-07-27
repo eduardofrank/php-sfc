@@ -54,12 +54,12 @@ $page_link = static function ( $p ) use ( $search, $h ) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cotizaciones · Sheet Fed Calc</title>
+    <title>Cotizaciones · Lab Gráfico</title>
     <link rel="stylesheet" href="<?php echo $h( SFC_BASE_PATH ); ?>/assets/admin.css">
 </head>
 <body class="adm-body">
 <header class="adm-header">
-    <div><strong>Sheet Fed Calc</strong> · Cotizaciones</div>
+    <div><strong>Lab Gráfico</strong> · Cotizaciones</div>
     <nav class="adm-nav">
         <a href="index.php">Precios</a>
         <a href="<?php echo $h( SFC_BASE_PATH ); ?>/" target="_blank" rel="noopener">Ver calculadora ↗</a>
