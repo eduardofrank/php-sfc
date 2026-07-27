@@ -53,8 +53,13 @@ try {
     $client_names = array();
 }
 
-$page_title = 'Cotización';
+$page_title  = 'Cotización';
+$body_class  = 'page-builder';
+$page_styles = array( 'quote-ui.css' );
 $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); };
+$money = static function ( $amount ) use ( $draft, $h ) {
+    return $h( $draft['currency'] . ' $' . number_format( (float) $amount, 2 ) );
+};
 
 require __DIR__ . '/src/partials/head.php';
 ?>
@@ -65,44 +70,48 @@ require __DIR__ . '/src/partials/head.php';
 
 <main class="app-main">
     <section class="app-hero">
-        <h1 class="app-title">Tu cotización</h1>
-        <p class="app-lead">Agrega uno o más productos, del mismo o de distintos tipos, y finaliza para generar un número de cotización.</p>
+        <p class="builder-kicker">Presupuesto de impresión</p>
+        <h1 class="app-title">Arma tu cotización</h1>
+        <p class="app-lead">Agrega uno o más productos, del mismo o de distintos tipos, y finaliza para emitir un número de cotización con precios fijos.</p>
     </section>
 
     <?php if ( $error ) : ?>
-        <div class="sfc__alert builder-alert"><?php echo $h( $error ); ?></div>
+        <div class="builder-alert"><?php echo $h( $error ); ?></div>
     <?php endif; ?>
 
     <div class="builder">
-        <section class="builder__items">
+        <section class="builder__items cropframe">
+            <span class="cropframe__b"></span>
+            <div class="builder__sheet-label">
+                <span>Hoja de trabajo</span>
+                <span><?php echo (int) $draft['count']; ?> ítem(s)</span>
+            </div>
+
             <?php if ( $draft['count'] < 1 ) : ?>
                 <div class="builder__empty">
-                    <p>Aún no has agregado productos a esta cotización.</p>
+                    <p>Todavía no hay productos en esta cotización.</p>
                     <a class="sfc__btn" href="<?php echo $h( $b ); ?>/products.php">Añadir el primer producto</a>
                 </div>
             <?php else : ?>
                 <ul class="builder__list" role="list">
-                    <?php foreach ( $draft['items'] as $item ) : ?>
+                    <?php foreach ( $draft['items'] as $i => $item ) : ?>
                         <li class="builder__row">
+                            <span class="builder__idx"><?php echo $h( str_pad( (string) ( $i + 1 ), 2, '0', STR_PAD_LEFT ) ); ?></span>
                             <span class="builder__label"><?php echo $h( $item['label'] ); ?></span>
-                            <span class="builder__line-total"><?php echo $h( $draft['currency'] . ' $' . number_format( $item['lineTotal'], 2 ) ); ?></span>
+                            <span class="builder__line-total"><?php echo $money( $item['lineTotal'] ); ?></span>
                             <form method="post" class="builder__remove">
                                 <input type="hidden" name="do" value="remove">
                                 <input type="hidden" name="item_id" value="<?php echo $h( $item['itemId'] ); ?>">
-                                <button type="submit" class="adm-link-danger" title="Quitar">Quitar</button>
+                                <button type="submit" title="Quitar" aria-label="Quitar ítem">✕</button>
                             </form>
                         </li>
                     <?php endforeach; ?>
                 </ul>
-                <div class="builder__grand">
-                    <span>Total</span>
-                    <strong><?php echo $h( $draft['currency'] . ' $' . number_format( $draft['grandTotal'], 2 ) ); ?></strong>
-                </div>
                 <div class="builder__actions">
-                    <a class="sfc__btn builder__add" href="<?php echo $h( $b ); ?>/products.php">+ Añadir producto</a>
+                    <a class="builder__add-row" href="<?php echo $h( $b ); ?>/products.php"><span class="plus">+</span> Añadir otro producto</a>
                     <form method="post" class="builder__clear">
                         <input type="hidden" name="do" value="clear">
-                        <button type="submit" class="builder__clear-btn">Vaciar cotización</button>
+                        <button type="submit" class="builder__clear-btn">Vaciar</button>
                     </form>
                 </div>
             <?php endif; ?>
@@ -110,7 +119,11 @@ require __DIR__ . '/src/partials/head.php';
 
         <?php if ( $draft['count'] > 0 ) : ?>
         <section class="builder__finalize">
-            <h2>Finalizar</h2>
+            <div class="builder__total-block">
+                <span class="lbl">Total</span>
+                <span class="amt"><?php echo $money( $draft['grandTotal'] ); ?></span>
+            </div>
+            <h2>Emitir cotización</h2>
             <form method="post">
                 <input type="hidden" name="do" value="finalize">
                 <label class="sfc__field">

@@ -22,7 +22,9 @@ $money = static function ( $amount, $currency ) {
     return $currency . ' $' . number_format( (float) $amount, 2 );
 };
 
-$page_title = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotización';
+$page_title  = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotización';
+$body_class  = 'page-quote';
+$page_styles = array( 'quote-ui.css' );
 
 require __DIR__ . '/src/partials/head.php';
 ?>
@@ -44,35 +46,42 @@ require __DIR__ . '/src/partials/head.php';
     </div>
 <?php else : ?>
     <?php $curr = $quote['currency']; ?>
-    <article class="quote-doc">
-        <div class="quote-doc__head">
-            <div>
-                <h1 class="quote-doc__number">Cotización <?php echo $h( $quote['quote_number'] ); ?></h1>
-                <?php if ( ! empty( $quote['title'] ) ) : ?>
-                    <p class="quote-doc__title"><?php echo $h( $quote['title'] ); ?></p>
-                <?php endif; ?>
+    <article class="quote-doc cropframe">
+        <span class="cropframe__b"></span>
+
+        <div class="quote-doc__masthead">
+            <div class="quote-doc__brand">Lab&nbsp;Gr<span>á</span>fico</div>
+            <div class="quote-doc__stamp">
+                <span class="k">Cotización</span>
+                <span class="num"><?php echo $h( $quote['quote_number'] ); ?></span>
             </div>
-            <dl class="quote-doc__meta">
-                <div><dt>Cliente</dt><dd><?php echo $h( $quote['client_name'] ); ?></dd></div>
-                <?php if ( ! empty( $quote['client_email'] ) ) : ?>
-                    <div><dt>Correo</dt><dd><?php echo $h( $quote['client_email'] ); ?></dd></div>
-                <?php endif; ?>
-                <div><dt>Fecha</dt><dd><?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?></dd></div>
-            </dl>
         </div>
+
+        <?php if ( ! empty( $quote['title'] ) ) : ?>
+            <p class="quote-doc__title"><?php echo $h( $quote['title'] ); ?></p>
+        <?php endif; ?>
+
+        <dl class="quote-doc__meta">
+            <div><dt>Cliente</dt><dd><?php echo $h( $quote['client_name'] ); ?></dd></div>
+            <?php if ( ! empty( $quote['client_email'] ) ) : ?>
+                <div><dt>Correo</dt><dd><?php echo $h( $quote['client_email'] ); ?></dd></div>
+            <?php endif; ?>
+            <div><dt>Fecha</dt><dd><?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?></dd></div>
+            <div><dt>Moneda</dt><dd><?php echo $h( $curr ); ?></dd></div>
+        </dl>
 
         <table class="quote-doc__items">
             <thead>
-                <tr><th>#</th><th>Descripción</th><th class="quote-doc__amount">Importe</th></tr>
+                <tr><th class="col-idx">#</th><th>Descripción</th><th class="quote-doc__amount">Importe</th></tr>
             </thead>
             <tbody>
                 <?php foreach ( $quote['items'] as $idx => $item ) : ?>
                     <?php $calc = sfc_app_item_calc_url( $item['product_slug'], $quote['share_token'], (int) $item['position'] ); ?>
                     <tr>
-                        <td><?php echo (int) $idx + 1; ?></td>
+                        <td class="col-idx"><span><?php echo $h( str_pad( (string) ( $idx + 1 ), 2, '0', STR_PAD_LEFT ) ); ?></span></td>
                         <td>
                             <span class="quote-doc__item-label"><?php echo $h( $item['label'] ); ?></span>
-                            <a class="quote-doc__item-open app-header--print-hide" href="<?php echo $h( $calc ); ?>">Abrir en calculadora</a>
+                            <a class="quote-doc__item-open" href="<?php echo $h( $calc ); ?>">Abrir en calculadora</a>
                         </td>
                         <td class="quote-doc__amount"><?php echo $h( $money( $item['line_total'], $curr ) ); ?></td>
                     </tr>
@@ -80,8 +89,9 @@ require __DIR__ . '/src/partials/head.php';
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2" class="quote-doc__total-label">Total</td>
-                    <td class="quote-doc__amount quote-doc__grand"><?php echo $h( $money( $quote['total_price'], $curr ) ); ?></td>
+                    <td class="col-idx"></td>
+                    <td class="quote-doc__total-label">Total</td>
+                    <td class="quote-doc__grand"><?php echo $h( $money( $quote['total_price'], $curr ) ); ?></td>
                 </tr>
             </tfoot>
         </table>
@@ -93,7 +103,7 @@ require __DIR__ . '/src/partials/head.php';
             </div>
         <?php endif; ?>
 
-        <p class="quote-doc__foot">Precios en <?php echo $h( $curr ); ?>. Cotización generada el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?>.</p>
+        <p class="quote-doc__foot">Cotización emitida el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?> · Precios fijos en <?php echo $h( $curr ); ?>.</p>
     </article>
 <?php endif; ?>
 </main>
