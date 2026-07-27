@@ -8,7 +8,7 @@
   --sfc-text-primary: #dcdcdc;
   --sfc-text-secondary: #a8a8a8;
   --sfc-text-muted: #7a7a7a;
-  --sfc-accent: oklch(0.66 0.107 220.6);
+  --sfc-accent: #53a1ff;
   --sfc-accent-soft: color-mix(in oklch, var(--sfc-accent) 18%, transparent);
   --sfc-success: #57c97a;
   --sfc-error: #f87171;

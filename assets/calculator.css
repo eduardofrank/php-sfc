@@ -11,7 +11,7 @@
   --sfc-text-muted: #7a7a7a;
   --sfc-control-bg: transparent;
   --sfc-control-bg-hover: color-mix(in oklch, var(--sfc-border-hi) 22%, var(--sfc-card));
-  --sfc-accent: oklch(0.66 0.107 220.6);
+  --sfc-accent: #53a1ff;
   --sfc-accent-soft: color-mix(in oklch, var(--sfc-accent) 18%, transparent);
   --sfc-success: #57c97a;
   --sfc-error: #f87171;
