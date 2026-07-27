@@ -156,10 +156,6 @@ html, body { margin: 0; padding: 0; }
   transform: translateX(3px);
 }
 
-.product-card--hub .product-card__link {
-  border-left: 2px solid var(--sfc-accent);
-}
-
 /* ---- Not found ---- */
 .app-notfound { padding: 40px 0; }
 .app-notfound a { color: var(--sfc-accent); }
