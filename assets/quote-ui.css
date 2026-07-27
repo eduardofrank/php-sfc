@@ -753,4 +753,18 @@
   .quote-doc__masthead { flex-direction: column; gap: 10px; }
   .quote-doc__stamp { text-align: left; }
   .page-builder .builder__items, .page-builder .builder__finalize { padding: 20px 16px; }
+
+  /* Calculator option groups are single no-wrap rows; on phones that squashes
+     4-5 long-labelled options into slivers. Let them wrap to 2-up (a lone
+     trailing option spans the full width) and restore a legible font size. */
+  .page-calc .sfc__options--single-row { flex-wrap: wrap; }
+  .page-calc .sfc__options--single-row > .sfc__option {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 0.9rem;
+  }
+  .page-calc .sfc__options--single-row > .sfc__option:last-child:nth-child(odd) {
+    flex-basis: 100%;
+  }
 }
