@@ -746,3 +746,11 @@
   font-size: 0.72rem;
   letter-spacing: 0.03em;
 }
+
+/* ---- Small-screen refinements ---- */
+@media (max-width: 560px) {
+  .quote-doc { padding: 24px 18px 28px; }
+  .quote-doc__masthead { flex-direction: column; gap: 10px; }
+  .quote-doc__stamp { text-align: left; }
+  .page-builder .builder__items, .page-builder .builder__finalize { padding: 20px 16px; }
+}

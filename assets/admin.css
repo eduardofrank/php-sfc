@@ -135,7 +135,10 @@ html, body { margin: 0; padding: 0; }
   text-transform: uppercase;
   padding: 0 8px; color: var(--sfc-accent); font-weight: 400;
 }
-fieldset.adm-card { margin-bottom: 18px; }
+/* <fieldset> defaults to min-inline-size:min-content, which would force the
+   card wider than the viewport; reset so the price table scrolls inside instead. */
+fieldset.adm-card { margin-bottom: 18px; min-inline-size: 0; }
+.adm-grid-scroll { min-width: 0; }
 
 .adm-row {
   display: flex; align-items: center; gap: 10px;
