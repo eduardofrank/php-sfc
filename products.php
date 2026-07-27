@@ -7,9 +7,11 @@
 require_once __DIR__ . '/bootstrap.php';
 sfc_draft_session_start();
 
-$products   = sfc_app_get_landing_products();
-$page_title = 'Elige un producto';
-$b          = SFC_BASE_PATH;
+$products    = sfc_app_get_landing_products();
+$page_title  = 'Elige un producto';
+$body_class  = 'page-picker';
+$page_styles = array( 'quote-ui.css' );
+$b           = SFC_BASE_PATH;
 
 require __DIR__ . '/src/partials/head.php';
 ?>

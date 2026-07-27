@@ -25,7 +25,7 @@
   src: url('/assets/fonts/space-mono-700.woff2') format('woff2');
 }
 
-.page-builder, .page-quote {
+.page-builder, .page-quote, .page-picker {
   --ink: #0c0e12;
   --sheet: #14171d;
   --raised: #1b1f27;
@@ -50,15 +50,17 @@
   font-family: var(--body);
 }
 
-.page-builder *, .page-quote * { box-sizing: border-box; }
+.page-builder *, .page-quote *, .page-picker * { box-sizing: border-box; }
 
 /* ---- Shared header ---- */
 .page-builder .app-header,
-.page-quote .app-header {
+.page-quote .app-header,
+.page-picker .app-header {
   border-bottom: 1px solid var(--line);
 }
 .page-builder .app-header__brand,
-.page-quote .app-header__brand {
+.page-quote .app-header__brand,
+.page-picker .app-header__brand {
   font-family: var(--display);
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -68,7 +70,8 @@
   gap: 9px;
 }
 .page-builder .app-header__brand::before,
-.page-quote .app-header__brand::before {
+.page-quote .app-header__brand::before,
+.page-picker .app-header__brand::before {
   content: "";
   width: 12px; height: 12px;
   /* registration-mark glyph: crosshair in a ring */
@@ -79,7 +82,8 @@
   border-radius: 50%;
 }
 .page-builder .app-header__back:hover,
-.page-quote .app-header__back:hover { color: var(--accent-bright); }
+.page-quote .app-header__back:hover,
+.page-picker .app-header__back:hover { color: var(--accent-bright); }
 
 /* ---- Crop-mark frame (the signature) ---- */
 .cropframe { position: relative; }
@@ -534,4 +538,98 @@
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .page-builder .sfc__btn, .page-builder .sfc__input { transition: none; }
+}
+
+/* ======================================================================
+   PRODUCT PICKER
+   ====================================================================== */
+.page-picker .app-hero { margin: 40px 0 30px; }
+.page-picker .app-title {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4vw, 2.9rem);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  color: var(--text);
+}
+.page-picker .app-lead { color: var(--muted); max-width: 56ch; }
+
+/* gapped, rounded card grid (no hairline background) */
+.page-picker .product-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+  background: none;
+  border: 0;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 620px) {
+  .page-picker .product-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .page-picker .product-grid { grid-template-columns: repeat(3, 1fr); }
+  /* center the lone last card in the 3-column layout */
+  .page-picker .product-grid > :last-child:nth-child(3n - 2) { grid-column: 2; }
+}
+
+.page-picker .product-card {
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+.page-picker .product-card:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 7%, var(--sheet));
+  transform: translateY(-2px);
+}
+.page-picker .product-card__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 22px;
+  min-height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+.page-picker .product-card__index {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--faint);
+  padding-top: 2px;
+  min-width: 1.8em;
+  transition: color 140ms ease;
+}
+.page-picker .product-card:hover .product-card__index { color: var(--accent); }
+.page-picker .product-card__body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.page-picker .product-card__title {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 1.06rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.page-picker .product-card__subtitle {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.page-picker .product-card__arrow {
+  color: var(--faint);
+  transition: color 140ms ease, transform 140ms ease;
+}
+.page-picker .product-card:hover .product-card__arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+.page-picker .app-footer {
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
 }
