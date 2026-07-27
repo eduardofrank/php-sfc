@@ -19,16 +19,20 @@ function sfc_get_tarjetas_de_presentacion_product_config() {
         'defaultQuantity' => 100,
         'sizes'           => array(
             '90x50' => array(
-                'label'         => array(
+                'label'    => array(
                     'en' => '90 × 50 mm',
                     'es' => '90 × 50 mm',
                 ),
-                'widthMm'       => 90,
-                'heightMm'      => 50,
-                // 24 cards per press sheet (rotated 8 × 3). Sheet count is
-                // ceil(quantity / 24); cols/rows are left to auto-imposition so
-                // the layout preview reflects the rotated 24-up arrangement.
-                'unitsPerSheet' => 24,
+                'widthMm'  => 90,
+                'heightMm' => 50,
+                // Self-adjusting imposition: use the denser 24-up (rotated 8 × 3)
+                // whenever it saves a press sheet, otherwise the tidier 20-up
+                // (4 × 5) that fills the sheet exactly. Sheet count works out to
+                // ceil(quantity / 24); 20-up only ever wins the ties (e.g. 100).
+                'impositionCandidates' => array(
+                    array( 'unitsPerSheet' => 20, 'impositionCols' => 4, 'impositionRows' => 5 ),
+                    array( 'unitsPerSheet' => 24 ),
+                ),
             ),
             '80x50' => array(
                 'label'          => array(

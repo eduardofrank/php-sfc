@@ -26,6 +26,56 @@ function sfc_get_size_imposition_options( $size_cfg ) {
 }
 
 /**
+ * Resolve the imposition for a size, minimizing press sheets.
+ *
+ * A size may declare 'impositionCandidates' (a list of imposition option sets).
+ * Each is evaluated for the ordered quantity and the one needing the fewest
+ * press sheets wins; ties are broken toward the earliest-listed candidate (the
+ * tidier layout). A denser candidate never costs more sheets, so it only wins
+ * when it actually saves paper — and the whole job uses that single imposition.
+ * Sizes without candidates fall back to their single imposition options.
+ *
+ * @param float               $width_mm  Unit width in millimeters.
+ * @param float               $height_mm Unit height in millimeters.
+ * @param int                 $quantity  Ordered unit quantity.
+ * @param array<string,mixed> $size_cfg  Product size config.
+ * @return array<string,mixed>|WP_Error
+ */
+function sfc_resolve_size_imposition( $width_mm, $height_mm, $quantity, $size_cfg ) {
+    $candidates = ( isset( $size_cfg['impositionCandidates'] ) && is_array( $size_cfg['impositionCandidates'] ) )
+        ? $size_cfg['impositionCandidates']
+        : array( $size_cfg );
+
+    $best = null;
+    foreach ( $candidates as $candidate ) {
+        $imposition = sfc_calculate_sheet_imposition(
+            $width_mm,
+            $height_mm,
+            $quantity,
+            sfc_get_size_imposition_options( (array) $candidate )
+        );
+        if ( is_wp_error( $imposition ) ) {
+            continue;
+        }
+        // Strictly fewer sheets wins; an equal count keeps the earlier candidate.
+        if ( null === $best || (int) $imposition['sheetQuantity'] < (int) $best['sheetQuantity'] ) {
+            $best = $imposition;
+        }
+    }
+
+    if ( null !== $best ) {
+        return $best;
+    }
+
+    return sfc_calculate_sheet_imposition(
+        $width_mm,
+        $height_mm,
+        $quantity,
+        sfc_get_size_imposition_options( (array) $size_cfg )
+    );
+}
+
+/**
  * Resolve print mode from calculator state.
  *
  * @param array<string,mixed> $product Product config.
@@ -535,11 +585,11 @@ function sfc_calculate_product_quote( $slug, $state ) {
     }
 
     $size_cfg   = $product['sizes'][ $size ];
-    $imposition = sfc_calculate_sheet_imposition(
+    $imposition = sfc_resolve_size_imposition(
         $dimensions['widthMm'],
         $dimensions['heightMm'],
         $quantity,
-        sfc_get_size_imposition_options( $size_cfg )
+        $size_cfg
     );
     if ( is_wp_error( $imposition ) ) {
         return $imposition;
