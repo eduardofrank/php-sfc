@@ -59,6 +59,9 @@ $page_title = $config && ! is_wp_error( $data )
     ? ( $data['strings']['product_title'] ?? 'Calculadora' )
     : 'Calculadora';
 
+$body_class  = 'page-calc';
+$page_styles = array( 'quote-ui.css' );
+
 require __DIR__ . '/src/partials/head.php';
 
 $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'

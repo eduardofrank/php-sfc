@@ -25,7 +25,7 @@
   src: url('/assets/fonts/space-mono-700.woff2') format('woff2');
 }
 
-.page-builder, .page-quote, .page-picker {
+.page-builder, .page-quote, .page-picker, .page-calc {
   --ink: #0c0e12;
   --sheet: #14171d;
   --raised: #1b1f27;
@@ -50,17 +50,19 @@
   font-family: var(--body);
 }
 
-.page-builder *, .page-quote *, .page-picker * { box-sizing: border-box; }
+.page-builder *, .page-quote *, .page-picker *, .page-calc * { box-sizing: border-box; }
 
 /* ---- Shared header ---- */
 .page-builder .app-header,
 .page-quote .app-header,
-.page-picker .app-header {
+.page-picker .app-header,
+.page-calc .app-header {
   border-bottom: 1px solid var(--line);
 }
 .page-builder .app-header__brand,
 .page-quote .app-header__brand,
-.page-picker .app-header__brand {
+.page-picker .app-header__brand,
+.page-calc .app-header__brand {
   font-family: var(--display);
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -71,7 +73,8 @@
 }
 .page-builder .app-header__brand::before,
 .page-quote .app-header__brand::before,
-.page-picker .app-header__brand::before {
+.page-picker .app-header__brand::before,
+.page-calc .app-header__brand::before {
   content: "";
   width: 12px; height: 12px;
   /* registration-mark glyph: crosshair in a ring */
@@ -83,7 +86,8 @@
 }
 .page-builder .app-header__back:hover,
 .page-quote .app-header__back:hover,
-.page-picker .app-header__back:hover { color: var(--accent-bright); }
+.page-picker .app-header__back:hover,
+.page-calc .app-header__back:hover { color: var(--accent-bright); }
 
 /* ---- Crop-mark frame (the signature) ---- */
 .cropframe { position: relative; }
@@ -627,6 +631,115 @@
 }
 
 .page-picker .app-footer {
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}
+
+/* ======================================================================
+   PRODUCT CALCULATOR
+   The calculator markup is JS-rendered .sfc__* classes styled by
+   calculator.css via CSS variables. Remap those variables to the Lab
+   Gráfico palette and layer the display/mono typography on top.
+   ====================================================================== */
+.page-calc .sfc {
+  --sfc-card: var(--sheet);
+  --sfc-card-nested: var(--raised);
+  --sfc-border: var(--line);
+  --sfc-border-hi: var(--line-strong);
+  --sfc-text-primary: var(--text);
+  --sfc-text-secondary: var(--muted);
+  --sfc-text-muted: var(--faint);
+  --sfc-success: var(--ok);
+  --sfc-error: var(--danger);
+  --sfc-accent-soft: var(--accent-tint);
+  color: var(--text);
+}
+
+/* headings + hero (fold-hub title) */
+.page-calc .app-title {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-calc .sfc__title {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* labels + section eyebrows -> mono */
+.page-calc .sfc__label,
+.page-calc .sfc__dim-label {
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+/* all figures -> mono tabular */
+.page-calc .sfc__summary-row strong,
+.page-calc .sfc__total-amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.page-calc .sfc__total-amount { color: var(--accent); }
+
+/* inputs */
+.page-calc .sfc__input {
+  border-radius: 0;
+  background: var(--ink);
+  border-color: var(--line-strong);
+}
+.page-calc .sfc__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* primary action ("Agregar a la cotización") */
+.page-calc .sfc__btn {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent);
+  transition: background 120ms ease, transform 80ms ease;
+}
+.page-calc .sfc__btn:hover { background: var(--accent-bright); border-color: var(--accent-bright); }
+.page-calc .sfc__btn:active { transform: translateY(1px); }
+.page-calc .sfc__added { color: var(--ok); }
+.page-calc .sfc__added-link { color: var(--accent); }
+
+/* fold-hub tiles pick up the cool palette + rounded corners */
+.page-calc .sfc-fold-hub__item {
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--sheet);
+}
+.page-calc .sfc-fold-hub__item.is-active { border-color: var(--accent); }
+
+/* draft bar on the calculator page */
+.page-calc .draft-bar {
+  background: color-mix(in oklch, var(--accent) 8%, var(--ink));
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+.page-calc .draft-bar__label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.68rem; }
+.page-calc .draft-bar__count { color: var(--accent); }
+.page-calc .draft-bar__total { color: var(--text); }
+.page-calc .draft-bar__cta { color: var(--accent); }
+.page-calc .draft-bar__cta:hover { color: var(--accent-bright); }
+
+.page-calc .app-footer {
   border-top: 1px solid var(--line);
   color: var(--faint);
   font-family: var(--mono);
