@@ -19,6 +19,12 @@ imposition → tiered per-sheet price table → lamination / die-cut / job servi
            → turnaround surcharge → trade discount
 ```
 
+Lamination is billed per press-sheet side; **die-cut and job services
+(cutting / creasing / stapling) are a percentage of the print cost** (lamination
+is a separate line). Job services are **per-product**: business cards are only
+cut, folded brochures are cut + creased, booklets stapled — set via each
+product's `jobServices`.
+
 Three pipelines, dispatched by `sfc_calculate_product_quote()`:
 
 - **flat** — letterhead, business cards, posters, postcards, flyers, rectangular

@@ -129,8 +129,8 @@ a shared host this is usually managed for you; otherwise `certbot --apache`.
 
 ## Updating a live install
 
-Re-run the sync, but **protect the runtime data** so an update does not wipe
-saved quotes or the admin password:
+Sync the code (protecting runtime data), apply any schema, then **reload PHP** so
+the new code actually runs:
 
 ```bash
 git -C /tmp/php-sfc-build pull
@@ -140,17 +140,62 @@ rsync -a --delete \
   --exclude='data/quotes/' \
   --exclude='data/config/admin-password.php' \
   --exclude='data/config/db.php' \
+  --exclude='data/config/options.json' \
   /tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
 
-# Apply any new schema (idempotent).
+# Apply any new schema (idempotent; a no-op when nothing changed).
 php /var/www/localhost/htdocs/php-sfc/bin/db-migrate.php
+
+# Reload PHP so opcache drops the old bytecode (see below).
+systemctl restart apache2        # mod_php / mod_fcgid: PHP runs inside Apache
+# stand-alone php-fpm instead:   systemctl restart php-fpm
 ```
 
-**Prices and updates:** `data/config/options.json` is tracked in git. If you
-maintain prices *in git* (edit + commit), a redeploy correctly carries them. If
-instead you edit prices through the **admin UI on the live server**, add
-`--exclude='data/config/options.json'` to the rsync above (or commit the
-server's copy back to git) so an update does not revert your live prices.
+### Reload PHP after every deploy (opcache)
+
+PHP caches compiled bytecode in **opcache**; copying new files does not refresh
+it, so after an `rsync` the server keeps running the *old* code until PHP is
+reloaded. This is the #1 cause of "the deploy didn't take" (old prices/behavior
+even though the files on disk are new). Two ways to handle it:
+
+- **Reload on each deploy** (above). With `mod_php` or `mod_fcgid` PHP lives
+  inside Apache, so `systemctl restart apache2` clears it; only a stand-alone
+  `php-fpm` needs its own restart. Find the unit with
+  `systemctl list-unit-files | grep -iE 'php|fpm'` (note: `list-units` only shows
+  *running* units, so a stopped/absent match there does not mean it isn't there).
+  If PHP is `mod_php`/`mod_fcgid` there is no `php-fpm` service at all — restart
+  Apache. Confirm which you have with `apache2ctl -M | grep -Ei 'php|fcgid|proxy_fcgi'`.
+- **Auto-detect changes** (no restart step): in the *web* `php.ini`
+  (Gentoo: `/etc/php/apache2-php8.x/php.ini` or `.../fpm-php8.x/php.ini`) set
+  ```ini
+  opcache.validate_timestamps = 1
+  opcache.revalidate_freq = 0
+  ```
+  and restart PHP once. After that every deploy is picked up automatically.
+
+To flush opcache without any service (any SAPI), hit `opcache_reset()` through the
+web once, then delete the file:
+```bash
+printf '<?php opcache_reset();' > /var/www/localhost/htdocs/php-sfc/_oc.php
+curl -s http://your-host/php-sfc/_oc.php && rm -f /var/www/localhost/htdocs/php-sfc/_oc.php
+```
+
+### Prices and rates ownership
+
+`data/config/options.json` holds **all price tables and the service rates**
+(cutting/creasing/stapling %, turnaround, etc.). The update sync above
+**excludes** it, so deploys never overwrite what you set in the live **/admin** —
+i.e. you manage pricing on the server. For that to work:
+
+- keep `data/config/` writable by the web user (see step 2), or admin saves fail
+  and the value silently reverts. The admin now shows a "no se pudo guardar"
+  error when it cannot write — if you see that, fix the permissions;
+- values are **per field**: a stray number in one row (e.g. cutting = 15 instead
+  of 10) only affects that service. Business cards are only *cut*; folded
+  brochures are *cut + creased*; booklets *stapled*.
+
+To instead manage pricing **in git**, drop the `options.json` exclude and edit +
+commit the file in the repo; then don't change prices on the server.
 
 ## Base path
 
