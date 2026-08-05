@@ -71,6 +71,16 @@ SELECT q.id, 0, q.product_slug, q.state, q.snapshot, q.total_price, q.product_sl
 FROM sfc_quotes q
 WHERE q.product_slug IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM sfc_quote_items i WHERE i.quote_id = q.id);
+
+-- Dual currency: daily BCV USD->VES rate, plus the rate frozen onto each quote.
+CREATE TABLE IF NOT EXISTS sfc_exchange_rates (
+    rate_date   DATE PRIMARY KEY,
+    ves_per_usd NUMERIC(18,4) NOT NULL,
+    source      TEXT,
+    fetched_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS ves_rate  NUMERIC(18,4);
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS total_ves NUMERIC(18,2);
 SQL;
 
 try {

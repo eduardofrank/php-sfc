@@ -91,26 +91,32 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
     $total = round( $total, 2 );
     $curr  = (string) ( $items[0]['currency'] ?? 'USD' );
 
+    // Freeze the issue-time VES rate (null when no rate is available yet).
+    $ves_rate  = sfc_current_usd_ves_rate();
+    $total_ves = null !== $ves_rate ? round( $total * $ves_rate, 2 ) : null;
+
     $pdo->beginTransaction();
     try {
         $number = sfc_quotes_next_number();
 
         $head = $pdo->prepare(
             'INSERT INTO sfc_quotes
-                (quote_number, share_token, client_id, total_price, currency, title, notes)
+                (quote_number, share_token, client_id, total_price, currency, title, notes, ves_rate, total_ves)
              VALUES
-                (:number, :token, :client, :total, :currency, :title, :notes)
+                (:number, :token, :client, :total, :currency, :title, :notes, :ves_rate, :total_ves)
              RETURNING id'
         );
         $head->execute(
             array(
-                ':number'   => $number,
-                ':token'    => $token,
-                ':client'   => $client_id,
-                ':total'    => number_format( $total, 2, '.', '' ),
-                ':currency' => $curr,
-                ':title'    => '' === $title ? null : $title,
-                ':notes'    => '' === $notes ? null : $notes,
+                ':number'    => $number,
+                ':token'     => $token,
+                ':client'    => $client_id,
+                ':total'     => number_format( $total, 2, '.', '' ),
+                ':currency'  => $curr,
+                ':title'     => '' === $title ? null : $title,
+                ':notes'     => '' === $notes ? null : $notes,
+                ':ves_rate'  => null !== $ves_rate ? number_format( $ves_rate, 4, '.', '' ) : null,
+                ':total_ves' => null !== $total_ves ? number_format( $total_ves, 2, '.', '' ) : null,
             )
         );
         $quote_id = (int) $head->fetchColumn();
@@ -147,6 +153,47 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
         'shareToken'  => $token,
         'total'       => $total,
         'currency'    => $curr,
+    );
+}
+
+/**
+ * Re-stamp a finalized quote to a new VES rate in place — same quote number and
+ * USD prices, only ves_rate / total_ves recomputed. Defaults to the current rate.
+ *
+ * @param int        $quote_id Quote id.
+ * @param float|null $rate     Bs. per USD; null uses sfc_current_usd_ves_rate().
+ * @return array{quoteNumber:string,vesRate:float,totalVes:float}|null Null if no rate.
+ */
+function sfc_quotes_update_rate( $quote_id, $rate = null ) {
+    $rate = null !== $rate ? (float) $rate : sfc_current_usd_ves_rate();
+    if ( null === $rate || $rate <= 0 ) {
+        return null;
+    }
+
+    $pdo  = sfc_db();
+    $stmt = $pdo->prepare(
+        'UPDATE sfc_quotes
+            SET ves_rate = :rate,
+                total_ves = round(total_price * :rate2, 2)
+          WHERE id = :id
+        RETURNING quote_number, ves_rate, total_ves'
+    );
+    $stmt->execute(
+        array(
+            ':rate'  => number_format( $rate, 4, '.', '' ),
+            ':rate2' => number_format( $rate, 4, '.', '' ),
+            ':id'    => (int) $quote_id,
+        )
+    );
+    $row = $stmt->fetch();
+    if ( ! $row ) {
+        return null;
+    }
+
+    return array(
+        'quoteNumber' => $row['quote_number'],
+        'vesRate'     => (float) $row['ves_rate'],
+        'totalVes'    => (float) $row['total_ves'],
     );
 }
 
