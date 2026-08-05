@@ -768,3 +768,28 @@
     flex-basis: 100%;
   }
 }
+
+/* ---- VES (bolívar) companion figures ---- */
+.sfc__total-ves { display: block; font-size: 0.62em; color: var(--muted); font-weight: 400; margin-top: 2px; }
+.page-builder .builder__line-ves,
+.page-builder .builder__total-ves { display: block; font-family: var(--mono); color: var(--muted); }
+.page-builder .builder__line-ves { font-size: 0.78rem; margin-top: 2px; }
+.page-builder .builder__total-ves { font-size: 0.6em; margin-top: 3px; }
+
+.quote-doc__amount-ves,
+.quote-doc__grand-ves { display: block; font-family: var(--mono); color: var(--muted); }
+.quote-doc__amount-ves { font-size: 0.8rem; margin-top: 3px; }
+.quote-doc__grand-ves { font-size: 0.62em; margin-top: 3px; }
+
+/* Staff-only "update rate" control on the quote document */
+.quote-doc__rate-tools {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line-strong);
+}
+.quote-doc__rate-stale { font-family: var(--mono); font-size: 0.76rem; color: var(--accent-bright); }
+.quote-doc__rate-btn {
+  font-family: var(--display); font-weight: 500; font-size: 0.85rem;
+  background: transparent; color: var(--accent); border: 1px solid var(--accent);
+  padding: 8px 14px; border-radius: 0; cursor: pointer;
+}
+.quote-doc__rate-btn:hover { background: var(--accent); color: var(--accent-ink); }

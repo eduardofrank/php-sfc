@@ -22,6 +22,7 @@ $sheet_specs    = sfc_get_sheet_specs();
 $imposition_gap = sfc_get_sheet_imposition_gap_mm();
 $quantity_tiers = sfc_get_quantity_tiers();
 $fulfillment    = sfc_get_fulfillment_settings();
+$exchange       = sfc_current_rate_row();
 
 /** Shorthand escapers. */
 $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); };
@@ -69,6 +70,7 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
         <a href="#hoja">Hoja y montaje</a>
         <a href="#cantidad">Niveles de cantidad</a>
         <a href="#entrega">Entrega</a>
+        <a href="#tasa">Tasa de cambio</a>
         <a href="#reset">Restaurar</a>
     </nav>
 
@@ -234,6 +236,32 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
             </label>
             <button type="submit" class="adm-btn">Guardar entrega</button>
         </form>
+    </section>
+
+    <!-- ================= EXCHANGE RATE ================= -->
+    <section id="tasa" class="adm-section">
+        <h2>Tasa de cambio (BCV)</h2>
+        <div class="adm-card">
+            <?php if ( $exchange ) : ?>
+                <p class="adm-rate-current">
+                    Vigente: <strong><?php echo $h( sfc_format_rate( (float) $exchange['ves_per_usd'] ) ); ?> / USD</strong>
+                    <span class="adm-help">· <?php echo $h( $exchange['rate_date'] ); ?> · <?php echo $h( $exchange['source'] ?? '—' ); ?></span>
+                </p>
+            <?php else : ?>
+                <p class="adm-help">Aún no hay tasa registrada. Los montos en Bs. no se mostrarán hasta que se ingrese una (o corra el script diario).</p>
+            <?php endif; ?>
+            <form method="post">
+                <?php $fields( 'save_exchange_rate' ); ?>
+                <label class="adm-row">
+                    <span>Bs. por 1 USD (hoy)</span>
+                    <input type="text" inputmode="decimal" name="ves_per_usd"
+                        value="<?php echo $exchange ? $h( number_format( (float) $exchange['ves_per_usd'], 2, '.', '' ) ) : ''; ?>"
+                        placeholder="p. ej. 40.25">
+                </label>
+                <p class="adm-help">Se actualiza automáticamente cada mañana; use esto como respaldo o para corregir la tasa del día.</p>
+                <button type="submit" class="adm-btn">Guardar tasa</button>
+            </form>
+        </div>
     </section>
 
     <!-- ================= RESET ================= -->

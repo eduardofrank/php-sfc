@@ -25,6 +25,15 @@ if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) {
         } catch ( Throwable $e ) {
             $flash = array( 'ok' => false, 'message' => 'No se pudo eliminar.' );
         }
+    } elseif ( 'update_rate' === ( $_POST['admin_action'] ?? '' ) ) {
+        try {
+            $upd   = sfc_quotes_update_rate( (int) ( $_POST['id'] ?? 0 ) );
+            $flash = $upd
+                ? array( 'ok' => true, 'message' => 'Cotización ' . $upd['quoteNumber'] . ' actualizada a ' . sfc_format_rate( $upd['vesRate'] ) . ' / USD.' )
+                : array( 'ok' => false, 'message' => 'No hay tasa de cambio disponible para actualizar.' );
+        } catch ( Throwable $e ) {
+            $flash = array( 'ok' => false, 'message' => 'No se pudo actualizar la tasa.' );
+        }
     }
 }
 
@@ -112,10 +121,21 @@ $page_link = static function ( $p ) use ( $search, $h ) {
                             <td><?php echo $h( $r['client_name'] ); ?></td>
                             <td><?php echo $h( $r['title'] ?? '' ); ?></td>
                             <td><?php echo (int) $r['item_count']; ?></td>
-                            <td><?php echo $h( $r['currency'] . ' $' . number_format( (float) $r['total_price'], 2 ) ); ?></td>
+                            <td>
+                                <?php echo $h( $r['currency'] . ' $' . number_format( (float) $r['total_price'], 2 ) ); ?>
+                                <?php if ( ! empty( $r['total_ves'] ) ) : ?>
+                                    <span class="adm-quotes__ves">Bs. <?php echo $h( number_format( (float) $r['total_ves'], 2, ',', '.' ) ); ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo $h( substr( (string) $r['created_at'], 0, 10 ) ); ?></td>
                             <td class="adm-quotes__actions">
                                 <a href="<?php echo $h( $share ); ?>" target="_blank" rel="noopener">Abrir</a>
+                                <form method="post" title="Actualizar la tasa Bs. a hoy">
+                                    <input type="hidden" name="csrf" value="<?php echo $h( $csrf ); ?>">
+                                    <input type="hidden" name="admin_action" value="update_rate">
+                                    <input type="hidden" name="id" value="<?php echo (int) $r['id']; ?>">
+                                    <button type="submit" class="adm-quotes__rate-btn">Actualizar tasa</button>
+                                </form>
                                 <form method="post" onsubmit="return confirm('¿Eliminar la cotización <?php echo $h( $r['quote_number'] ); ?>?');">
                                     <input type="hidden" name="csrf" value="<?php echo $h( $csrf ); ?>">
                                     <input type="hidden" name="admin_action" value="delete">

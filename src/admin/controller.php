@@ -55,11 +55,29 @@ function sfc_admin_handle_post() {
             return sfc_admin_save_quantity_tiers();
         case 'save_fulfillment':
             return sfc_admin_save_fulfillment();
+        case 'save_exchange_rate':
+            return sfc_admin_save_exchange_rate();
         case 'reset_defaults':
             return sfc_admin_reset_defaults();
     }
 
     return array( 'ok' => false, 'message' => 'Acción no reconocida.' );
+}
+
+/**
+ * Set today's USD->VES rate manually (fallback / override for the daily fetch).
+ *
+ * @return array{ok:bool,message:string}
+ */
+function sfc_admin_save_exchange_rate() {
+    $raw  = str_replace( ',', '.', trim( (string) ( $_POST['ves_per_usd'] ?? '' ) ) );
+    $rate = (float) $raw;
+    if ( $rate <= 0 ) {
+        return array( 'ok' => false, 'message' => 'Ingrese una tasa mayor que cero.' );
+    }
+    return sfc_set_manual_rate( $rate, 'manual' )
+        ? array( 'ok' => true, 'message' => 'Tasa de cambio actualizada: ' . sfc_format_rate( $rate ) . ' / USD.' )
+        : array( 'ok' => false, 'message' => sfc_admin_write_error() );
 }
 
 /**

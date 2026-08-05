@@ -275,7 +275,8 @@ function sfc_quotes_list( $filters = array(), $limit = 25, $offset = 0 ) {
     list( $where, $params ) = sfc_quotes_filter_sql( $filters );
 
     $sql = 'SELECT q.id, q.quote_number, q.share_token, q.title, q.total_price,
-                   q.currency, q.status, q.created_at, c.name AS client_name,
+                   q.currency, q.status, q.created_at, q.ves_rate, q.total_ves,
+                   c.name AS client_name,
                    (SELECT COUNT(*) FROM sfc_quote_items i WHERE i.quote_id = q.id) AS item_count
             FROM sfc_quotes q JOIN sfc_clients c ON c.id = q.client_id'
         . $where

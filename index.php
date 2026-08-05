@@ -60,6 +60,10 @@ $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 
 $money = static function ( $amount ) use ( $draft, $h ) {
     return $h( $draft['currency'] . ' $' . number_format( (float) $amount, 2 ) );
 };
+$ves_rate = sfc_current_usd_ves_rate();
+$ves = static function ( $amount ) use ( $ves_rate, $h ) {
+    return $h( sfc_format_ves( (float) $amount, $ves_rate ) );
+};
 
 require __DIR__ . '/src/partials/head.php';
 ?>
@@ -98,7 +102,7 @@ require __DIR__ . '/src/partials/head.php';
                         <li class="builder__row">
                             <span class="builder__idx"><?php echo $h( str_pad( (string) ( $i + 1 ), 2, '0', STR_PAD_LEFT ) ); ?></span>
                             <span class="builder__label"><?php echo $h( $item['label'] ); ?></span>
-                            <span class="builder__line-total"><?php echo $money( $item['lineTotal'] ); ?></span>
+                            <span class="builder__line-total"><?php echo $money( $item['lineTotal'] ); ?><?php if ( $ves_rate ) : ?><span class="builder__line-ves"><?php echo $ves( $item['lineTotal'] ); ?></span><?php endif; ?></span>
                             <form method="post" class="builder__remove">
                                 <input type="hidden" name="do" value="remove">
                                 <input type="hidden" name="item_id" value="<?php echo $h( $item['itemId'] ); ?>">
@@ -121,7 +125,7 @@ require __DIR__ . '/src/partials/head.php';
         <section class="builder__finalize">
             <div class="builder__total-block">
                 <span class="lbl">Total</span>
-                <span class="amt"><?php echo $money( $draft['grandTotal'] ); ?></span>
+                <span class="amt"><?php echo $money( $draft['grandTotal'] ); ?><?php if ( $ves_rate ) : ?><span class="builder__total-ves"><?php echo $ves( $draft['grandTotal'] ); ?></span><?php endif; ?></span>
             </div>
             <h2>Emitir cotización</h2>
             <form method="post">

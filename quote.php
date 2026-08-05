@@ -6,9 +6,14 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
+require_once SFC_APP_DIR . '/src/admin/auth.php';
 
 $b     = SFC_BASE_PATH;
 $token = isset( $_GET['token'] ) ? sanitize_key( wp_unslash( $_GET['token'] ) ) : '';
+
+// Only treat the viewer as staff if an admin session cookie exists (avoids
+// starting a session for every client who opens a share link).
+$is_staff = isset( $_COOKIE['sfc_admin_sess'] ) && sfc_admin_is_logged_in();
 
 $quote = null;
 try {
@@ -17,10 +22,29 @@ try {
     $quote = null;
 }
 
+// Staff-only: re-stamp this quote to the current exchange rate, in place.
+if ( $quote && $is_staff && 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? 'GET' )
+    && 'update_rate' === ( $_POST['do'] ?? '' ) ) {
+    if ( sfc_admin_csrf_valid( $_POST['csrf'] ?? '' ) ) {
+        sfc_quotes_update_rate( (int) $quote['id'] );
+    }
+    header( 'Location: ' . $b . '/quote.php?token=' . rawurlencode( $token ) );
+    exit;
+}
+
 $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); };
 $money = static function ( $amount, $currency ) {
     return $currency . ' $' . number_format( (float) $amount, 2 );
 };
+
+// Frozen VES rate on this quote (0 when the quote predates dual-currency).
+$ves_rate = $quote && isset( $quote['ves_rate'] ) ? (float) $quote['ves_rate'] : 0.0;
+$has_ves  = $ves_rate > 0;
+$ves = static function ( $usd ) use ( $ves_rate, $h ) {
+    return $h( sfc_format_ves( (float) $usd, $ves_rate > 0 ? $ves_rate : null ) );
+};
+$current_rate = $is_staff ? sfc_current_usd_ves_rate() : null;
+$rate_stale   = $is_staff && $has_ves && $current_rate && abs( $current_rate - $ves_rate ) > 0.0001;
 
 $page_title  = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotización';
 $body_class  = 'page-quote';
@@ -83,7 +107,7 @@ require __DIR__ . '/src/partials/head.php';
                             <span class="quote-doc__item-label"><?php echo $h( $item['label'] ); ?></span>
                             <a class="quote-doc__item-open" href="<?php echo $h( $calc ); ?>">Abrir en calculadora</a>
                         </td>
-                        <td class="quote-doc__amount"><?php echo $h( $money( $item['line_total'], $curr ) ); ?></td>
+                        <td class="quote-doc__amount"><?php echo $h( $money( $item['line_total'], $curr ) ); ?><?php if ( $has_ves ) : ?><span class="quote-doc__amount-ves"><?php echo $ves( $item['line_total'] ); ?></span><?php endif; ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -91,10 +115,23 @@ require __DIR__ . '/src/partials/head.php';
                 <tr>
                     <td class="col-idx"></td>
                     <td class="quote-doc__total-label">Total</td>
-                    <td class="quote-doc__grand"><?php echo $h( $money( $quote['total_price'], $curr ) ); ?></td>
+                    <td class="quote-doc__grand"><?php echo $h( $money( $quote['total_price'], $curr ) ); ?><?php if ( $has_ves ) : ?><span class="quote-doc__grand-ves"><?php echo $ves( $quote['total_price'] ); ?></span><?php endif; ?></td>
                 </tr>
             </tfoot>
         </table>
+
+        <?php if ( $is_staff ) : ?>
+            <div class="quote-doc__rate-tools app-header--print-hide">
+                <?php if ( $rate_stale ) : ?>
+                    <span class="quote-doc__rate-stale">Emitida a <?php echo $h( sfc_format_rate( $ves_rate ) ); ?> / USD · hoy <?php echo $h( sfc_format_rate( $current_rate ) ); ?>.</span>
+                <?php endif; ?>
+                <form method="post">
+                    <input type="hidden" name="do" value="update_rate">
+                    <input type="hidden" name="csrf" value="<?php echo $h( sfc_admin_csrf_token() ); ?>">
+                    <button type="submit" class="quote-doc__rate-btn">Actualizar a la tasa de hoy</button>
+                </form>
+            </div>
+        <?php endif; ?>
 
         <?php if ( ! empty( $quote['notes'] ) ) : ?>
             <div class="quote-doc__notes">
@@ -103,7 +140,7 @@ require __DIR__ . '/src/partials/head.php';
             </div>
         <?php endif; ?>
 
-        <p class="quote-doc__foot">Cotización emitida el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?> · Precios fijos en <?php echo $h( $curr ); ?>.</p>
+        <p class="quote-doc__foot">Cotización emitida el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?> · Precios fijos en <?php echo $h( $curr ); ?><?php if ( $has_ves ) : ?> · Tasa BCV: <?php echo $h( sfc_format_rate( $ves_rate ) ); ?> / USD<?php endif; ?>.</p>
     </article>
 <?php endif; ?>
 </main>

@@ -239,3 +239,12 @@ input:focus { outline: none; border-color: var(--sfc-accent); box-shadow: 0 0 0 
 @media (prefers-reduced-motion: reduce) {
   .adm-btn { transition: none; }
 }
+
+/* VES amounts + rate controls */
+.adm-quotes__ves { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--sfc-text-secondary); margin-top: 2px; }
+.adm-quotes__rate-btn {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--sfc-accent); text-decoration: underline; font: inherit; font-size: 0.9rem;
+}
+.adm-rate-current { margin: 0 0 14px; color: var(--sfc-text-secondary); }
+.adm-rate-current strong { color: var(--sfc-text-primary); font-family: var(--mono); }

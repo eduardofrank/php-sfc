@@ -17,6 +17,22 @@
       return '$' + Number(value || 0).toFixed(2);
     },
 
+    // Format a USD amount as bolívares (es-VE: "Bs. 3.481,63"). Returns '' when
+    // no rate is available. rate defaults to SFC.data.vesRate.
+    moneyVes: function (value, rate) {
+      var r = rate == null ? (SFC.data && SFC.data.vesRate) : rate;
+      if (r == null || !(r > 0)) {
+        return '';
+      }
+      return (
+        'Bs. ' +
+        (Number(value || 0) * Number(r)).toLocaleString('es-VE', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      );
+    },
+
     formatTemplate: function (template, vars) {
       return String(template || '').replace(/\{(\w+)\}/g, function (_, key) {
         return vars[key] != null ? vars[key] : '';

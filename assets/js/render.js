@@ -185,6 +185,19 @@
       );
     },
 
+    // Grand-total block with a bolívar sub-line when a rate is available.
+    totalHtml: function (quote, strings) {
+      var ves = utils.moneyVes(quote.totalPrice);
+      return (
+        '<div class="sfc__total"><span>' +
+        utils.esc(strings.total_label || 'Total') +
+        '</span><span class="sfc__total-amount">' +
+        utils.money(quote.totalPrice) +
+        (ves ? '<span class="sfc__total-ves">' + utils.esc(ves) + '</span>' : '') +
+        '</span></div>'
+      );
+    },
+
     summary: function () {
       var strings = SFC.strings;
       var quote = SFC.quote;
@@ -333,11 +346,7 @@
         '</strong></div>' +
         addonRows +
         tradeRows +
-        '<div class="sfc__total"><span>' +
-        utils.esc(strings.total_label || 'Total') +
-        '</span><span class="sfc__total-amount">' +
-        utils.money(quote.totalPrice) +
-        '</span></div>'
+        SFC.render.totalHtml(quote, strings)
       );
     },
 

@@ -53,6 +53,8 @@ if ( $config && ! is_wp_error( $data ) ) {
     // Standalone endpoints replace admin-ajax; no nonce needed.
     $data['ajaxUrl'] = SFC_BASE_PATH . '/api/index.php';
     $data['nonce']   = '';
+    // Current USD->VES rate for live Bs. display (null hides VES).
+    $data['vesRate'] = sfc_current_usd_ves_rate();
 }
 
 $page_title = $config && ! is_wp_error( $data )
