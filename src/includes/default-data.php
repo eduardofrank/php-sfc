@@ -257,6 +257,10 @@ function sfc_get_default_job_service_rates() {
             'label_key' => 'service_stapling',
             'percent'   => 0.0,
         ),
+        'die_cutting' => array(
+            'label_key' => 'service_die_cutting',
+            'percent'   => 25.0,
+        ),
     );
 }
 

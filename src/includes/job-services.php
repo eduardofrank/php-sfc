@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string[]
  */
 function sfc_get_job_service_keys() {
-    return array( 'cutting', 'creasing', 'stapling' );
+    return array( 'cutting', 'creasing', 'stapling', 'die_cutting' );
 }
 
 /**
