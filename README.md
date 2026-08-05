@@ -82,6 +82,22 @@ finalize** (`YYYY-NNNN`, per-year number), so the document is a fixed, dated quo
   browses, searches, and deletes quotes. The server re-prices on add and finalize
   and never trusts a client-supplied total.
 
+## Dual currency (USD + VES)
+
+Every subtotal is shown in **bolívares** next to USD, using the daily **BCV** rate.
+Pricing stays in USD (the source of truth); VES is a display conversion.
+
+- The rate lives in `sfc_exchange_rates` (one row/day), fetched each morning by
+  `bin/fetch-bcv-rate.py` (cron, BCV scrape + JSON-API fallback) or set manually in
+  `/admin → Tasa de cambio`. `src/exchange-rates.php` reads the latest rate and
+  formats Bs. (es-VE, `Bs. 3.481,63`).
+- A finalized quote **freezes** its issue-time rate (`sfc_quotes.ves_rate`/
+  `total_ves`), so a sent quote's Bs. total is fixed — mirroring the frozen USD
+  prices. Staff can **re-stamp a quote to the current rate in place** (same number,
+  same USD) from `/admin/quotes.php` or the document (when logged in) via
+  `sfc_quotes_update_rate()`.
+- No rate yet → the app shows USD only (VES hidden), never an error.
+
 ## Maintaining prices
 
 All price-affecting values (price tables, lamination / die-cut / turnaround /

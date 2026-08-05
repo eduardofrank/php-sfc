@@ -93,7 +93,7 @@ Create the schema (idempotent — safe to re-run on every deploy):
 
 ```bash
 cd /var/www/localhost/htdocs/php-sfc
-php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_quote_counters, sfc_quote_items, sfc_quotes"
+php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_exchange_rates, sfc_quote_counters, sfc_quote_items, sfc_quotes"
 ```
 
 ## 5. Make sure `.htaccess` overrides are allowed
@@ -120,7 +120,36 @@ off). If the whole site returns **500** right after deploy, the host allows only
 per-directory `data/.htaccess`, `src/.htaccess`, `bin/.htaccess` deny files use
 only `Require`, which is the most widely allowed).
 
-## 6. HTTPS (recommended)
+## 6. Daily BCV exchange rate (VES) — cron
+
+Quotes show the bolívar amount alongside USD, using the daily **BCV** rate stored in
+`sfc_exchange_rates`. A Python script fetches it each morning; PHP reads the latest row.
+(Without a rate, the app simply shows USD only — nothing breaks.)
+
+```bash
+# one-time: install the fetcher's deps (use your distro's python)
+pip install requests beautifulsoup4 psycopg2-binary
+
+# test it once (DB creds via env, same names PHP uses):
+SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' \
+  python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py
+# -> "fetch-bcv-rate: 2026-08-05 = Bs. 40.2500/USD (bcv-scrape)"
+```
+
+Add a cron entry to run it before business hours (America/Caracas). It carries its own env, since
+cron does not inherit Apache's:
+
+```cron
+# min hour dom mon dow  (server clock; adjust to hit ~07:00 Caracas)
+0 7 * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /usr/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py >> /var/log/sfc-bcv.log 2>&1
+```
+
+The script tries the BCV site first, falls back to a maintained JSON API, and exits non-zero on
+failure (leaving the previous day's rate in place). If a morning run fails, set the rate manually in
+**/admin → Tasa de cambio**. Staff can also re-stamp a saved quote to the current rate from
+`/admin/quotes.php` ("Actualizar tasa") without rebuilding it.
+
+## 7. HTTPS (recommended)
 
 Saved-quote share links and the admin session cookie should travel over TLS. On
 a shared host this is usually managed for you; otherwise `certbot --apache`.
