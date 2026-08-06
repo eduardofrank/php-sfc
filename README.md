@@ -151,11 +151,14 @@ the app connects with DDEV's default credentials automatically (`src/db.php`).
 
 ### Verified quotes (defaults)
 
+Totals below use the shipped default rates, including the **cutting** job service
+(10% of print) that applies to flat products — so `Total` is above the base print.
+
 | Product | Config | Total |
 |---------|--------|-------|
-| Business cards | 90×50, ×100, 4x0, matte laminate | $15.80 (base print $14.55) |
-| Posters | 450×310, ×5, 150 g | $13.50 |
-| Letterhead | carta, ×100 | $129.50 |
+| Business cards | 90×50, ×100, 4x0, matte laminate | $17.26 (print $14.55 + cut $1.46 + laminate $1.25) |
+| Posters | 450×310, ×5, 150 g | $14.85 (print $13.50 + cut $1.35) |
+| Letterhead | carta, ×100 | $142.45 (print $129.50 + cut $12.95) |
 | Album | 215.9×279.4, ×2, 20 pp | with $25/album binding |
 | Catalog | 215.9×139.7, ×10, 8 inner pp | $49.40 |
-| Die-cut stickers | Ø80, ×100, lithosticker | $23.63 |
+| Die-cut stickers | Ø80, ×100, lithosticker | $25.52 (print $18.90 + die-cut $4.73 + cut $1.89) |

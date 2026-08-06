@@ -170,11 +170,11 @@
     "sfc_job_service_rates": {
         "cutting": {
             "label_key": "service_cutting",
-            "percent": 0
+            "percent": 10
         },
         "creasing": {
             "label_key": "service_creasing",
-            "percent": 0
+            "percent": 5
         },
         "stapling": {
             "label_key": "service_stapling",
