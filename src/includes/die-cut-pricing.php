@@ -58,7 +58,7 @@ function sfc_resolve_die_cut_rate_tier( $sheet_quantity ) {
  * @return array<string,mixed>
  */
 function sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity ) {
-    if ( empty( $product['dieCutShapes'] ) || ! is_array( $pricing ) ) {
+    if ( ! is_array( $pricing ) || ! sfc_product_uses_die_cutting( $product ) ) {
         return $pricing;
     }
 
@@ -104,7 +104,7 @@ function sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity ) {
  * @return array<string,string>|null
  */
 function sfc_build_die_cut_cart_row( $quote, $product, $language ) {
-    if ( empty( $product['dieCutShapes'] ) ) {
+    if ( ! sfc_product_uses_die_cutting( $product ) ) {
         return null;
     }
 

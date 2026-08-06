@@ -19,11 +19,17 @@ imposition → tiered per-sheet price table → lamination / die-cut / job servi
            → turnaround surcharge → trade discount
 ```
 
-Lamination is billed per press-sheet side; **die-cut and job services
-(cutting / creasing / stapling) are a percentage of the print cost** (lamination
-is a separate line). Job services are **per-product**: business cards are only
-cut, folded brochures are cut + creased, booklets stapled — set via each
-product's `jobServices`.
+Lamination is billed per press-sheet side; **job services are a percentage of the
+print cost** (lamination is a separate line). Job services are **per-product**,
+set via each product's `jobServices`: business cards are only cut, folded
+brochures are cut + creased, booklets stapled.
+
+**Die-cutting** is configured the same way — add `die_cutting` to a product's
+`jobServices` and any product gets it — but it is priced through the **tiered
+die-cut rate system** (a % of print cost that steps down by total press-sheet
+count: 25% ≤50 / 20% 51–100 / 15% >100, editable in `/admin`), not a flat
+per-service rate. The shape picker on die-cut stickers (`dieCutShapes`) is a
+separate, UI-only concern.
 
 Three pipelines, dispatched by `sfc_calculate_product_quote()`:
 

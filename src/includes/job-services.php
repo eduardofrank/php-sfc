@@ -9,7 +9,23 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string[]
  */
 function sfc_get_job_service_keys() {
-    return array( 'cutting', 'creasing', 'stapling', 'die_cutting' );
+    return array( 'cutting', 'creasing', 'stapling' );
+}
+
+/**
+ * Whether a product opts into die-cutting.
+ *
+ * Die-cutting is configured like a job service — listed in the product's
+ * `jobServices` — but priced through the tiered die-cut rate system
+ * (sfc_apply_die_cut_pricing), not the flat per-service percentage. Any product
+ * can enable it by adding 'die_cutting' to its jobServices config.
+ *
+ * @param array<string,mixed> $product Product config.
+ * @return bool
+ */
+function sfc_product_uses_die_cutting( $product ) {
+    $services = (array) ( $product['jobServices'] ?? array() );
+    return in_array( 'die_cutting', $services, true );
 }
 
 /**
@@ -98,5 +114,9 @@ function sfc_apply_product_addon_pricing( $product, $state, $pricing, $sheet_qua
         ? $product['jobServices']
         : array( 'cutting' );
 
-    return sfc_apply_job_service_pricing( $pricing, $sheet_quantity, $services, $print_base );
+    // 'die_cutting' is priced by the tiered die-cut system above, not the flat
+    // per-service percentage, so keep it out of the job-service loop.
+    $flat_services = array_values( array_diff( $services, array( 'die_cutting' ) ) );
+
+    return sfc_apply_job_service_pricing( $pricing, $sheet_quantity, $flat_services, $print_base );
 }

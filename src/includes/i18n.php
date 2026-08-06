@@ -362,10 +362,6 @@ function sfc_get_string_map() {
             'en' => 'Stapling',
             'es' => 'Grapado',
         ),
-        'service_die_cutting' => array(
-            'en' => 'Die-cutting',
-            'es' => 'Troquelado',
-        ),
         'die_cut_rates_title' => array(
             'en' => 'Die-cutting (% of print cost)',
             'es' => 'Troquelado (% del costo de impresión)',
