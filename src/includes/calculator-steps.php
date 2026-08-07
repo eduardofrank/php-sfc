@@ -301,7 +301,20 @@ function sfc_build_flat_product_steps( $product ) {
         }
     }
 
-    if ( ! empty( $product['printModes'] ) ) {
+    if ( ! empty( $product['printModesByPaper'] ) ) {
+        // Sides available depend on the chosen paper (e.g. Lithosticker/Vinil
+        // are one-sided only); resolve options as printModesByPaper[state.paper].
+        $steps[] = array(
+            'key'            => 'printMode',
+            'type'           => 'options',
+            'field'          => 'printMode',
+            'labelKey'       => 'step_sides',
+            'labelFallback'  => 'Caras impresas',
+            'optionsFrom'    => 'printModesByPaper',
+            'optionsByField' => 'paper',
+            'required'       => true,
+        );
+    } elseif ( ! empty( $product['printModes'] ) ) {
         $steps[] = array(
             'key'           => 'printMode',
             'type'          => 'options',
@@ -310,6 +323,21 @@ function sfc_build_flat_product_steps( $product ) {
             'labelFallback' => 'Caras impresas',
             'optionsFrom'   => 'printModes',
             'required'      => true,
+        );
+    }
+
+    if ( ! empty( $product['services'] ) ) {
+        // User-selectable job services (multi-select). Optional — priced from
+        // the selected keys in state (cutting/creasing/stapling/die_cutting).
+        $steps[] = array(
+            'key'           => 'services',
+            'type'          => 'checkboxes',
+            'field'         => 'services',
+            'labelKey'      => 'step_services',
+            'labelFallback' => 'Servicios',
+            'optionsFrom'   => 'services',
+            'required'      => false,
+            'helpKeys'      => array( 'services_help' ),
         );
     }
 

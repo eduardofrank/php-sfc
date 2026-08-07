@@ -62,6 +62,10 @@
           var length = parseFloat(SFC.state.customLengthMm);
           return !isNaN(width) && !isNaN(length) && width > 0 && length > 0;
 
+        case 'checkboxes':
+          // Optional multi-select (e.g. services): any subset is valid, none included.
+          return true;
+
         default:
           return true;
       }

@@ -11,8 +11,9 @@ sfc_draft_session_start();
 
 $slug = isset( $_GET['product'] ) ? sanitize_key( str_replace( '_', '-', wp_unslash( $_GET['product'] ) ) ) : '';
 
-$is_hub    = sfc_app_is_fold_hub_slug( $slug );
-$fold_slug = '';
+$is_hub      = sfc_app_is_fold_hub_slug( $slug );
+$is_advanced = ( 'producto-avanzado' === $slug );
+$fold_slug   = '';
 if ( $is_hub ) {
     $requested = isset( $_GET['fold'] ) ? sanitize_key( wp_unslash( $_GET['fold'] ) ) : '';
     $items     = sfc_get_fold_hub_items();
@@ -112,7 +113,43 @@ $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
         </section>
     <?php endif; ?>
 
-    <div class="sfc" id="sfc-root"></div>
+    <?php if ( $is_advanced ) : ?>
+        <section class="pa-chooser" aria-label="Tipo de proyecto">
+            <h1 class="app-title">Producto avanzado</h1>
+            <div class="pa-typeswitch" role="radiogroup" aria-label="Tipo de proyecto">
+                <label class="pa-type">
+                    <input type="radio" name="pa-type" value="plano" checked>
+                    <span>Plano</span>
+                </label>
+                <label class="pa-type">
+                    <input type="radio" name="pa-type" value="editorial">
+                    <span>Editorial</span>
+                </label>
+            </div>
+        </section>
+
+        <div class="pa-panel pa-panel--plano">
+            <div class="sfc" id="sfc-root"></div>
+        </div>
+
+        <section class="pa-panel pa-panel--editorial is-hidden" aria-label="Producto editorial">
+            <p class="pa-editorial__intro">Elige el tipo de producto editorial:</p>
+            <nav class="pa-editorial__grid">
+                <a class="pa-editorial__card" href="<?php echo esc_attr( $b ); ?>/product.php?product=catalogos-y-revistas">
+                    <span class="pa-editorial__title">Catálogos y revistas</span>
+                    <span class="pa-editorial__desc">Cuadernillos engrapados a caballo con tripa y portada.</span>
+                    <span class="pa-editorial__go" aria-hidden="true">→</span>
+                </a>
+                <a class="pa-editorial__card" href="<?php echo esc_attr( $b ); ?>/product.php?product=albumes">
+                    <span class="pa-editorial__title">Álbum</span>
+                    <span class="pa-editorial__desc">Álbumes de tapa dura impresos a doble cara.</span>
+                    <span class="pa-editorial__go" aria-hidden="true">→</span>
+                </a>
+            </nav>
+        </section>
+    <?php else : ?>
+        <div class="sfc" id="sfc-root"></div>
+    <?php endif; ?>
 
     <script>window.__SFC_DATA = <?php echo wp_json_encode_compat( $data ); ?>;</script>
     <script src="<?php echo esc_attr( $b ); ?>/assets/vendor/jquery.min.js"></script>
@@ -124,6 +161,26 @@ $b = SFC_BASE_PATH; // URL prefix, '' at site root or e.g. '/php-sfc'
     <script src="<?php echo esc_attr( $b ); ?>/assets/js/quote.js"></script>
     <script src="<?php echo esc_attr( $b ); ?>/assets/js/events.js"></script>
     <script src="<?php echo esc_attr( $b ); ?>/assets/js/app.js"></script>
+    <?php if ( $is_advanced ) : ?>
+    <script>
+    (function () {
+        var radios = document.querySelectorAll('input[name="pa-type"]');
+        var plano = document.querySelector('.pa-panel--plano');
+        var editorial = document.querySelector('.pa-panel--editorial');
+        if (!plano || !editorial) { return; }
+        function sync() {
+            var checked = document.querySelector('input[name="pa-type"]:checked');
+            var isEditorial = checked && checked.value === 'editorial';
+            plano.classList.toggle('is-hidden', isEditorial);
+            editorial.classList.toggle('is-hidden', !isEditorial);
+        }
+        for (var i = 0; i < radios.length; i++) {
+            radios[i].addEventListener('change', sync);
+        }
+        sync();
+    })();
+    </script>
+    <?php endif; ?>
 <?php endif; ?>
 </main>
 

@@ -13,6 +13,7 @@ require_once SFC_PLUGIN_DIR . 'includes/products/folletos-plegados.php';
 require_once SFC_PLUGIN_DIR . 'includes/products/etiquetas-rectangulares.php';
 require_once SFC_PLUGIN_DIR . 'includes/products/stickers-y-etiquetas.php';
 require_once SFC_PLUGIN_DIR . 'includes/products/albumes.php';
+require_once SFC_PLUGIN_DIR . 'includes/products/producto-avanzado.php';
 
 /**
  * Registered sheet-fed product definitions.
@@ -35,6 +36,7 @@ function sfc_get_product_registry() {
                 'etiquetas-rectangulares'  => sfc_get_etiquetas_rectangulares_product_config(),
                 'stickers-y-etiquetas'     => sfc_get_stickers_y_etiquetas_product_config(),
                 'albumes'                  => sfc_get_albumes_product_config(),
+                'producto-avanzado'        => sfc_get_producto_avanzado_product_config(),
             ),
             sfc_get_folded_product_registry()
         );

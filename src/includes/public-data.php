@@ -97,6 +97,29 @@ function sfc_build_product_js_data( $slug ) {
         );
     }
 
+    // Per-paper sides: printModesByPaper[paperKey] = subset of the printModes
+    // map, so the sides step can resolve options via optionsByField: 'paper'.
+    $print_modes_by_paper = array();
+    foreach ( (array) ( $product['printModesByPaper'] ?? array() ) as $paper_key => $mode_keys ) {
+        $subset = array();
+        foreach ( (array) $mode_keys as $mode_key ) {
+            if ( isset( $print_modes[ $mode_key ] ) ) {
+                $subset[ $mode_key ] = $print_modes[ $mode_key ];
+            }
+        }
+        $print_modes_by_paper[ $paper_key ] = $subset;
+    }
+
+    // User-selectable job services (checkbox step). Keys are canonical service
+    // keys (cutting/creasing/stapling/die_cutting) so pricing needs no mapping.
+    $services = array();
+    foreach ( (array) ( $product['services'] ?? array() ) as $key => $service ) {
+        $services[ $key ] = array(
+            'key'   => $key,
+            'label' => $service['label'][ $language ] ?? $key,
+        );
+    }
+
     $die_cut_shapes = array();
     foreach ( (array) ( $product['dieCutShapes'] ?? array() ) as $key => $shape ) {
         $die_cut_shapes[ $key ] = array(
@@ -118,7 +141,9 @@ function sfc_build_product_js_data( $slug ) {
         'sizes'         => $sizes,
         'surfaces'      => $surfaces,
         'printModes'    => $print_modes,
+        'printModesByPaper' => $print_modes_by_paper,
         'papers'        => $papers,
+        'services'      => $services,
         'dieCutShapes'  => $die_cut_shapes,
         'finishes'      => $finishes,
         'requiredSelections' => array_values( (array) ( $product['requireSelection'] ?? array() ) ),

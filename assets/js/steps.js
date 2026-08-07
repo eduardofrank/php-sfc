@@ -140,6 +140,33 @@
         .join('');
     },
 
+    checkboxButtons: function (items, selectedList, field) {
+      var selected = selectedList || [];
+      return Object.keys(items)
+        .map(function (key) {
+          var item = items[key];
+          var on = selected.indexOf(key) !== -1;
+          var selectedClass = on ? ' sfc__option--selected' : '';
+          var label = utils.formatOptionLabel(item.label);
+          var stacked = label.stacked ? ' sfc__option--stacked' : '';
+          return (
+            '<button type="button" class="sfc__option sfc__option--check' +
+            stacked +
+            selectedClass +
+            '" data-check-field="' +
+            utils.esc(field) +
+            '" data-value="' +
+            utils.esc(key) +
+            '" aria-pressed="' +
+            (on ? 'true' : 'false') +
+            '"><span class="sfc__check-box" aria-hidden="true"></span>' +
+            label.html +
+            '</button>'
+          );
+        })
+        .join('');
+    },
+
     renderSection: function (label, body, items, trailingHtml) {
       var optionsClass = 'sfc__options';
       if (utils.shouldUseSingleOptionRow(items)) {
@@ -257,6 +284,25 @@
       );
     },
 
+    renderCheckboxesStep: function (step) {
+      var items = SFC.steps.optionsForStep(step);
+      if (!utils.hasOptions(items)) {
+        return '';
+      }
+
+      var selected = SFC.state[step.field];
+      if (!(selected instanceof Array)) {
+        selected = [];
+      }
+
+      return SFC.steps.renderSection(
+        SFC.steps.stepLabel(step),
+        SFC.steps.checkboxButtons(items, selected, step.field),
+        items,
+        SFC.steps.helpParagraphs(step)
+      );
+    },
+
     renderStaticOptionStep: function (step) {
       var text = SFC.data[step.textFrom];
       if (!text) {
@@ -289,6 +335,8 @@
             );
           }
           return dimBody;
+        case 'checkboxes':
+          return SFC.steps.renderCheckboxesStep(step);
         case 'static-option':
           return SFC.steps.renderStaticOptionStep(step);
         default:

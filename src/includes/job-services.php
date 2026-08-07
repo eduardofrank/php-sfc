@@ -105,18 +105,41 @@ function sfc_apply_product_addon_pricing( $product, $state, $pricing, $sheet_qua
         return $pricing;
     }
 
-    $pricing = sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity );
+    // Effective services: user-selected (state) for products that expose the
+    // services checkbox, else the fixed per-product jobServices config.
+    $services = sfc_resolve_effective_job_services( $product, $state );
 
-    // Job services are per-product: a flat product is only cut unless its config
-    // declares otherwise (e.g. folded brochures also crease). Products that do not
-    // fold must not be charged the creasing rate.
-    $services = ( isset( $product['jobServices'] ) && is_array( $product['jobServices'] ) )
-        ? $product['jobServices']
-        : array( 'cutting' );
+    // 'die_cutting' is priced by the tiered die-cut system; pass the effective
+    // list so the gate honours the user's selection, not just config.
+    $pricing = sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity, $services );
 
-    // 'die_cutting' is priced by the tiered die-cut system above, not the flat
-    // per-service percentage, so keep it out of the job-service loop.
+    // Flat percentage services (cutting/creasing/stapling); die_cutting is billed
+    // by the tiered system above, so keep it out of the job-service loop.
     $flat_services = array_values( array_diff( $services, array( 'die_cutting' ) ) );
 
     return sfc_apply_job_service_pricing( $pricing, $sheet_quantity, $flat_services, $print_base );
+}
+
+/**
+ * Resolve the effective job-service list for a quote.
+ *
+ * Products that expose a `services` map let the user choose (read from the
+ * validated state); all others use the fixed per-product `jobServices` config
+ * (default: cutting only). Returns canonical service keys.
+ *
+ * @param array<string,mixed> $product Product config.
+ * @param array<string,mixed> $state   Normalized calculator state.
+ * @return string[]
+ */
+function sfc_resolve_effective_job_services( $product, $state ) {
+    if ( ! empty( $product['services'] ) && is_array( $product['services'] ) ) {
+        $selected = ( isset( $state['services'] ) && is_array( $state['services'] ) )
+            ? $state['services']
+            : array();
+        return array_values( array_intersect( $selected, array_keys( $product['services'] ) ) );
+    }
+
+    return ( isset( $product['jobServices'] ) && is_array( $product['jobServices'] ) )
+        ? $product['jobServices']
+        : array( 'cutting' );
 }

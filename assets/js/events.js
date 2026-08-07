@@ -50,6 +50,34 @@
             return;
           }
 
+          if (step.type === 'checkboxes' && step.field) {
+            var picked = SFC.state[step.field];
+            if (picked == null) {
+              return;
+            }
+            if (!(picked instanceof Array)) {
+              delete SFC.state[step.field];
+              changed = true;
+              return;
+            }
+            if (!visible) {
+              if (picked.length) {
+                SFC.state[step.field] = [];
+                changed = true;
+              }
+              return;
+            }
+            var opts = SFC.steps.optionsForStep(step);
+            var kept = picked.filter(function (key) {
+              return !!opts[key];
+            });
+            if (kept.length !== picked.length) {
+              SFC.state[step.field] = kept;
+              changed = true;
+            }
+            return;
+          }
+
           if (step.type !== 'options' || !step.field || SFC.state[step.field] == null) {
             return;
           }
@@ -83,6 +111,25 @@
         return;
       }
 
+      SFC.quoteApi.schedule();
+    },
+
+    // Toggle a value in an array-valued (checkbox) state field, e.g. services.
+    handleServiceToggle: function (field, value) {
+      var list = SFC.state[field] instanceof Array ? SFC.state[field].slice() : [];
+      var idx = list.indexOf(value);
+      if (idx === -1) {
+        list.push(value);
+      } else {
+        list.splice(idx, 1);
+      }
+      SFC.state[field] = list;
+      SFC.quote = null;
+
+      SFC.events.pruneState();
+
+      SFC.render.page();
+      clearTimeout(SFC.quoteTimer);
       SFC.quoteApi.schedule();
     },
 
@@ -349,6 +396,13 @@
 
       root.on('click', '[data-field]', function () {
         SFC.events.handleOptionClick($(this).attr('data-field'), $(this).attr('data-value'));
+      });
+
+      root.on('click', '[data-check-field]', function () {
+        SFC.events.handleServiceToggle(
+          $(this).attr('data-check-field'),
+          $(this).attr('data-value')
+        );
       });
 
       root.on('input', '#sfc-quantity', function () {

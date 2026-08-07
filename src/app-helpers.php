@@ -61,6 +61,7 @@ function sfc_app_get_landing_products() {
         'etiquetas-rectangulares',
         'stickers-y-etiquetas',
         'albumes',
+        'producto-avanzado',
     );
 
     $subtitles = array(
@@ -74,6 +75,7 @@ function sfc_app_get_landing_products() {
         'stickers-y-etiquetas'     => 'Stickers troquelados: circulares o de forma libre.',
         'albumes'                  => 'Álbumes de tapa dura impresos a doble cara.',
         'folletos-plegados'        => 'Folletos plegables: medio, tríptico, en Z, puerta y más.',
+        'producto-avanzado'        => 'Calcula cualquier producto: define papel, caras, servicios y acabado.',
     );
 
     $cards = array();

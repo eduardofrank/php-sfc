@@ -57,8 +57,13 @@ function sfc_resolve_die_cut_rate_tier( $sheet_quantity ) {
  * @param int                 $sheet_quantity Press sheets required.
  * @return array<string,mixed>
  */
-function sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity ) {
-    if ( ! is_array( $pricing ) || ! sfc_product_uses_die_cutting( $product ) ) {
+function sfc_apply_die_cut_pricing( $product, $pricing, $sheet_quantity, $services = null ) {
+    // When an effective services list is supplied (user-selectable products),
+    // honour it; otherwise fall back to the fixed jobServices config gate.
+    $uses = null !== $services
+        ? in_array( 'die_cutting', (array) $services, true )
+        : sfc_product_uses_die_cutting( $product );
+    if ( ! is_array( $pricing ) || ! $uses ) {
         return $pricing;
     }
 

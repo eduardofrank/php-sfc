@@ -453,6 +453,17 @@ function sfc_normalize_product_state( $product, $state ) {
         }
     }
 
+    if ( ! empty( $product['services'] ) && is_array( $product['services'] ) ) {
+        $selected = array();
+        foreach ( (array) ( $state['services'] ?? array() ) as $service ) {
+            $service = sanitize_key( $service );
+            if ( isset( $product['services'][ $service ] ) && ! in_array( $service, $selected, true ) ) {
+                $selected[] = $service;
+            }
+        }
+        $normalized['services'] = $selected;
+    }
+
     if ( 'custom' === $normalized['size'] ) {
         $normalized['customWidthMm']  = isset( $state['customWidthMm'] ) ? (float) $state['customWidthMm'] : 0.0;
         $normalized['customLengthMm'] = isset( $state['customLengthMm'] ) ? (float) $state['customLengthMm'] : 0.0;

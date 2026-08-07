@@ -34,13 +34,31 @@ separate, UI-only concern.
 Three pipelines, dispatched by `sfc_calculate_product_quote()`:
 
 - **flat** — letterhead, business cards, posters, postcards, flyers, rectangular
-  stickers, die-cut stickers, and the six folded-brochure variants
+  stickers, die-cut stickers, the six folded-brochure variants, and **Producto
+  Avanzado**
 - **booklet** — catalogs & magazines (saddle-stitch, inner + cover runs)
 - **album** — hardcover albums (duplex sheets + per-album binding fee)
 
 The browser never prices: it POSTs the form state to `api/index.php` and renders
 the returned quote. The server is the single source of truth (saving a quote
 re-prices it and never trusts a client-supplied total).
+
+### Producto Avanzado
+
+A non-boxed calculator (`producto-avanzado`) for pricing *any* product. The page
+opens with a **Tipo de proyecto** choice: **Plano** or **Editorial**.
+
+- **Plano** is a superset flat calculator (dimensions incl. custom, quantity,
+  paper weight, surface, printed sides, lamination, turnaround) with two extras:
+  **user-selectable services** — a checkbox step (`type: checkboxes`, state array
+  `services`) with Corte/Signado/Grapado/Troquel mapped to the canonical service
+  keys `cutting/creasing/stapling/die_cutting`; and **per-paper sides**
+  (`printModesByPaper` + `optionsByField`) so Lithosticker/Vinil offer one side
+  only. Surface (Mate/Brillante) shows only for coated weights, as with any flat
+  product. Pricing rides the existing engine — services are read from state
+  (`sfc_resolve_effective_job_services()`), the weights reuse existing tables.
+- **Editorial** routes to the existing **Catálogos y revistas** and **Álbum**
+  calculators (different pipelines), so nothing is duplicated.
 
 ## Architecture
 
