@@ -125,7 +125,7 @@ function sfc_get_postales_product_config() {
                 'es' => 'Papel',
             ),
             'step_surface' => array(
-                'en' => 'Paper stock',
+                'en' => 'Paper finish',
                 'es' => 'Acabado del papel',
             ),
             'step_sides' => array(

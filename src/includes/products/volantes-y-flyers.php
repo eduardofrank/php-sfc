@@ -198,7 +198,7 @@ function sfc_get_volantes_y_flyers_product_config() {
                 'es' => 'Peso del papel',
             ),
             'step_surface' => array(
-                'en' => 'Paper stock',
+                'en' => 'Paper finish',
                 'es' => 'Acabado del papel',
             ),
             'step_sides' => array(

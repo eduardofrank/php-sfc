@@ -146,7 +146,7 @@ function sfc_get_albumes_product_config() {
                 'es' => 'Gramaje del papel',
             ),
             'step_surface' => array(
-                'en' => 'Paper stock',
+                'en' => 'Paper finish',
                 'es' => 'Acabado del papel',
             ),
             'step_hardcover_finish' => array(

@@ -135,7 +135,7 @@ function sfc_get_tarjetas_de_presentacion_product_config() {
                 'es' => 'Papel',
             ),
             'step_surface' => array(
-                'en' => 'Paper stock',
+                'en' => 'Paper finish',
                 'es' => 'Acabado del papel',
             ),
             'step_sides' => array(

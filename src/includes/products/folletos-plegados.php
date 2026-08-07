@@ -263,7 +263,7 @@ function sfc_get_folded_product_strings( $title ) {
             'es' => 'Peso del papel',
         ),
         'step_surface' => array(
-            'en' => 'Paper stock',
+            'en' => 'Paper finish',
             'es' => 'Acabado del papel',
         ),
         'step_sides' => array(
