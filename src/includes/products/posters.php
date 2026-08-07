@@ -45,7 +45,6 @@ function sfc_get_posters_product_config() {
                 ),
                 'paperType' => 'coated',
                 'gsm'       => 150,
-                'surface'   => 'matte',
             ),
             'gsm200' => array(
                 'label'     => array(
@@ -54,7 +53,6 @@ function sfc_get_posters_product_config() {
                 ),
                 'paperType' => 'coated',
                 'gsm'       => 200,
-                'surface'   => 'matte',
             ),
             'gsm300' => array(
                 'label'     => array(
@@ -63,7 +61,20 @@ function sfc_get_posters_product_config() {
                 ),
                 'paperType' => 'coated',
                 'gsm'       => 300,
-                'surface'   => 'matte',
+            ),
+        ),
+        'surfaces'          => array(
+            'matte'  => array(
+                'label' => array(
+                    'en' => 'Matte',
+                    'es' => 'Mate',
+                ),
+            ),
+            'glossy' => array(
+                'label' => array(
+                    'en' => 'Gloss',
+                    'es' => 'Brillante',
+                ),
             ),
         ),
         'printModes'        => array(
@@ -131,6 +142,10 @@ function sfc_get_posters_product_config() {
             'step_paper' => array(
                 'en' => 'Paper',
                 'es' => 'Papel',
+            ),
+            'step_surface' => array(
+                'en' => 'Paper finish',
+                'es' => 'Acabado del papel',
             ),
             'step_sides' => array(
                 'en' => 'Sides to print',
