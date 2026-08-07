@@ -315,8 +315,8 @@ function sfc_get_folded_product_strings( $title ) {
             'es' => 'Mínimo {min} folletos. La cantidad se imprime {units} por hoja de impresión.',
         ),
         'selection_required' => array(
-            'en' => 'Enter quantity and select paper, stock (when coated), and finish to see your quote.',
-            'es' => 'Ingrese cantidad y seleccione peso, stock (si es recubierto) y acabado para ver su cotización.',
+            'en' => 'Enter quantity and select paper weight, paper finish (when coated), and lamination to see your quote.',
+            'es' => 'Ingrese cantidad y seleccione peso, acabado del papel (si es recubierto) y laminado para ver su cotización.',
         ),
         'add_to_cart' => array(
             'en' => 'Add to cart',

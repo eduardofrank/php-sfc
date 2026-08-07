@@ -202,7 +202,7 @@ function sfc_get_albumes_product_config() {
                 'es' => 'La última hoja usa {filled} de {total} espacios disponibles.',
             ),
             'selection_required' => array(
-                'en' => 'Select paper, stock, and hardcover finish to see your quote.',
+                'en' => 'Select paper weight, paper finish, and hardcover finish to see your quote.',
                 'es' => 'Seleccione gramaje, acabado del papel y tapa dura para ver su cotización.',
             ),
             'add_to_cart' => array(

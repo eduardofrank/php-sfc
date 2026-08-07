@@ -355,8 +355,8 @@ function sfc_get_producto_avanzado_product_config() {
                 'es' => 'Mínimo {min} piezas. La cantidad se imprime {units} por hoja de impresión.',
             ),
             'selection_required' => array(
-                'en' => 'Enter quantity and select paper, finish (when coated) and lamination to see your quote.',
-                'es' => 'Ingrese cantidad y seleccione peso, acabado del papel (si es recubierto) y acabado para ver su cotización.',
+                'en' => 'Enter quantity and select paper weight, paper finish (when coated), and lamination to see your quote.',
+                'es' => 'Ingrese cantidad y seleccione peso, acabado del papel (si es recubierto) y laminado para ver su cotización.',
             ),
             'add_to_cart' => array(
                 'en' => 'Add to cart',
