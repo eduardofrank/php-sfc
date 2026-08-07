@@ -46,19 +46,42 @@ re-prices it and never trusts a client-supplied total).
 ### Producto Avanzado
 
 A non-boxed calculator (`producto-avanzado`) for pricing *any* product. The page
-opens with a **Tipo de proyecto** choice: **Plano** or **Editorial**.
+opens with a **Tipo de proyecto** radio: **Plano** or **Editorial**.
 
-- **Plano** is a superset flat calculator (dimensions incl. custom, quantity,
-  paper weight, surface, printed sides, lamination, turnaround) with two extras:
-  **user-selectable services** — a checkbox step (`type: checkboxes`, state array
-  `services`) with Corte/Signado/Grapado/Troquel mapped to the canonical service
-  keys `cutting/creasing/stapling/die_cutting`; and **per-paper sides**
-  (`printModesByPaper` + `optionsByField`) so Lithosticker/Vinil offer one side
-  only. Surface (Mate/Brillante) shows only for coated weights, as with any flat
-  product. Pricing rides the existing engine — services are read from state
-  (`sfc_resolve_effective_job_services()`), the weights reuse existing tables.
-- **Editorial** routes to the existing **Catálogos y revistas** and **Álbum**
+**What it does**
+
+- **Plano** — a superset flat calculator with everything a flat product offers:
+  - **Dimensiones**: 140×100, Media Carta, Carta, Tabloide, Tamaño Personalizado
+    (with custom W/H)
+  - **Cantidad** entry field
+  - **Peso del Papel**: Bond, 115/150/200/250/300 g, Lithosticker, Vinil
+  - **Acabado del Papel** (Mate/Brillante) — shown *only* for the coated weights,
+    hidden for Bond/Lithosticker/Vinil (reuses the existing surface-gating)
+  - **Caras Impresas** — one/two sides, with **two-sided automatically removed for
+    Lithosticker/Vinil**
+  - **Servicios** — real checkboxes (Corte/Signado/Grapado/Troquel), check all that
+    apply
+  - **Acabado** (Ninguno / Laminado Mate / Brillante) and **Tiempo de entrega**
+- **Editorial** — routes to the existing **Catálogos y revistas** and **Álbum**
   calculators (different pipelines), so nothing is duplicated.
+
+**How it's kept low-risk**
+
+- Pricing rides the **existing engine unmodified**: paper weights map onto existing
+  tables; services are read from state via `sfc_resolve_effective_job_services()`;
+  die-cutting (Troquel) still uses the tiered rate system.
+- The one genuinely new control — a checkbox step (`type: checkboxes`, array-valued
+  state `services`, keys `cutting/creasing/stapling/die_cutting`) plus per-paper
+  sides (`printModesByPaper` + `optionsByField`) — is guarded so **every existing
+  product is byte-for-byte unchanged** (verified by regression on posters and
+  die-cut stickers).
+
+**Verification (DDEV, headless DevTools)**
+
+Selecting Carta + 200 g revealed **Acabado del papel** and **Caras impresas**;
+switching to Vinil collapsed sides to one option and hid surface; checking Corte +
+Troquel produced a live **$186.98** (cutting $13.85 + tiered die-cut $34.63) with
+the **Bs. 141.489,32** VES line; the Editorial toggle hid Plano and linked out.
 
 ## Architecture
 
