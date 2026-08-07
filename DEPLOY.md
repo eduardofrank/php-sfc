@@ -180,6 +180,23 @@ systemctl restart apache2        # mod_php / mod_fcgid: PHP runs inside Apache
 # stand-alone php-fpm instead:   systemctl restart php-fpm
 ```
 
+### Code-only deploys (no migration)
+
+Most changes — new products, calculator steps, labels/copy, pricing logic, JS/CSS
+— touch **no database schema**, so `db-migrate.php` is a **no-op** and the deploy
+is just: **pull → rsync → reload PHP**. The migrate step is always safe to run
+(idempotent), so leaving it in the routine costs nothing; only skip it if you want
+the shortest path and know the change added no `CREATE TABLE`/`ALTER TABLE` in
+`bin/db-migrate.php`.
+
+Run the migrate step when a change **does** alter the schema — the schema block in
+`bin/db-migrate.php` changed (a new table or column), which so far means the saved-
+quote tables and the `sfc_exchange_rates` / `ves_rate` / `total_ves` additions.
+When in doubt, run it: it never harms an up-to-date database.
+
+Either way the **opcache reload is mandatory** — a code-only deploy that skips the
+Apache restart will keep serving the old bytecode.
+
 ### Reload PHP after every deploy (opcache)
 
 PHP caches compiled bytecode in **opcache**; copying new files does not refresh

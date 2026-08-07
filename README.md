@@ -190,6 +190,16 @@ ddev exec php public/bin/db-migrate.php    # create the quote tables
 The DDEV project uses PostgreSQL (`database.type: postgres` in `.ddev/config.yaml`);
 the app connects with DDEV's default credentials automatically (`src/db.php`).
 
+### Deployment
+
+Full server setup and the live-update flow are in **[DEPLOY.md](DEPLOY.md)**. Most
+changes — new products, calculator steps, labels/copy, pricing logic, JS/CSS —
+touch no database schema, so a **code-only deploy** is just **pull → rsync → reload
+PHP** (`db-migrate.php` is a no-op and can be skipped). Run the migration only when
+a change alters the schema block in `bin/db-migrate.php` (a new table/column); it is
+idempotent, so running it always is safe. Either way, **reloading PHP (opcache) is
+mandatory** — skipping it serves the old bytecode.
+
 ### Verified quotes (defaults)
 
 Totals below use the shipped default rates, including the **cutting** job service
