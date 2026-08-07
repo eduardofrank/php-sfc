@@ -264,7 +264,7 @@ function sfc_get_folded_product_strings( $title ) {
         ),
         'step_surface' => array(
             'en' => 'Paper stock',
-            'es' => 'Stock del papel',
+            'es' => 'Acabado del papel',
         ),
         'step_sides' => array(
             'en' => 'Sides to print',

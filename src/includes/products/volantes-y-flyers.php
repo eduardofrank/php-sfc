@@ -199,7 +199,7 @@ function sfc_get_volantes_y_flyers_product_config() {
             ),
             'step_surface' => array(
                 'en' => 'Paper stock',
-                'es' => 'Stock del papel',
+                'es' => 'Acabado del papel',
             ),
             'step_sides' => array(
                 'en' => 'Sides to print',

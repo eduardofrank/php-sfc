@@ -463,7 +463,7 @@ function sfc_build_booklet_product_steps( $product ) {
             'type'          => 'options',
             'field'         => 'innerSurface',
             'labelKey'      => 'step_inner_surface',
-            'labelFallback' => 'Stock del papel — tripa',
+            'labelFallback' => 'Acabado del papel — tripa',
             'optionsFrom'   => 'surfaces',
             'required'      => true,
             'visibleWhen'   => array(
@@ -522,7 +522,7 @@ function sfc_build_booklet_product_steps( $product ) {
                 'type'           => 'options',
                 'field'          => 'coverSurface',
                 'labelKey'       => 'step_cover_surface',
-                'labelFallback'  => 'Stock del papel — portada',
+                'labelFallback'  => 'Acabado del papel — portada',
                 'optionsFrom'    => 'surfaces',
                 'required'       => true,
                 'visibleWhenAny' => $cover_surface_groups,

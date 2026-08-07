@@ -235,7 +235,7 @@ function sfc_get_catalogos_y_revistas_product_config() {
             ),
             'step_inner_surface' => array(
                 'en' => 'Inner paper stock',
-                'es' => 'Stock del papel — tripa',
+                'es' => 'Acabado del papel — tripa',
             ),
             'step_cover_weight' => array(
                 'en' => 'Cover weight',
@@ -251,7 +251,7 @@ function sfc_get_catalogos_y_revistas_product_config() {
             ),
             'step_cover_surface' => array(
                 'en' => 'Cover paper stock',
-                'es' => 'Stock del papel — portada',
+                'es' => 'Acabado del papel — portada',
             ),
             'step_cover_finish' => array(
                 'en' => 'Cover finish',
