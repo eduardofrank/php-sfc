@@ -151,7 +151,126 @@ failure (leaving the previous day's rate in place). If a morning run fails, set 
 **/admin → Tasa de cambio**. Staff can also re-stamp a saved quote to the current rate from
 `/admin/quotes.php` ("Actualizar tasa") without rebuilding it.
 
-## 7. HTTPS (recommended)
+> **On unreliable power, use the systemd timer in §7 instead of cron.** A plain cron
+> job never runs if the machine was off at its scheduled time, so a morning outage
+> would leave the rate stale all day. The timer catches up missed runs and refreshes
+> shortly after every boot.
+
+## 7. Power-loss resilience (auto-recovery after reboot)
+
+Frequent grid outages mean the server reboots often and uncleanly. The goal: when
+power returns, the **site and the daily rate fetch come back with no human
+intervention**. Three pieces — enable the services on boot, run the fetch from a
+resilient timer, then verify.
+
+### 7a. Auto-start the core services on boot
+
+The site is down after every outage until Apache and PostgreSQL run. Enable them so
+systemd starts them on boot (PostgreSQL's unit is versioned on Gentoo — find it
+first):
+
+```bash
+sudo systemctl enable --now apache2
+systemctl list-unit-files | grep -i postgres        # e.g. postgresql-15.service
+sudo systemctl enable --now postgresql-15            # use the unit you found
+
+systemctl is-enabled apache2 postgresql-15           # -> enabled / enabled
+```
+
+PostgreSQL is **crash-safe** (it replays its write-ahead log on start), so an
+unclean shutdown recovers on its own — enabling it just guarantees it starts. The
+app also degrades gracefully: if the DB is briefly unavailable after boot, the
+calculator still prices from `options.json` and the footer simply omits the rate —
+never an error.
+
+### 7b. Fetch the rate from a systemd timer (survives missed runs)
+
+Replace the cron entry from §6. First remove the old line (`sudo crontab -e`, delete
+the `fetch-bcv-rate` line), then:
+
+Put the DB credentials in a root-only env file (keeps the password out of the unit):
+
+```bash
+sudo tee /etc/sfc-bcv.env >/dev/null <<'ENV'
+SFC_DB_HOST=127.0.0.1
+SFC_DB_PORT=5432
+SFC_DB_NAME=sheetfedcalc
+SFC_DB_USER=sheetfedcalc
+SFC_DB_PASS=your-db-password
+ENV
+sudo chmod 600 /etc/sfc-bcv.env
+```
+
+Create the service — `/etc/systemd/system/sfc-bcv-rate.service`:
+
+```ini
+[Unit]
+Description=Fetch daily BCV USD->VES rate
+Wants=network-online.target
+After=network-online.target postgresql-15.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sfc-bcv.env
+# Retry up to 5×, 60s apart, so a flaky link right after an outage still lands the rate.
+ExecStart=/bin/sh -c 'for i in 1 2 3 4 5; do /opt/sfc-venv/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py && exit 0; sleep 60; done; exit 1'
+```
+
+Create the timer — `/etc/systemd/system/sfc-bcv-rate.timer`:
+
+```ini
+[Unit]
+Description=Daily BCV rate fetch (persistent + on boot)
+
+[Timer]
+# 07:00 Caracas daily. The trailing timezone needs systemd >= 247; if yours is
+# older, drop it and use the system-clock equivalent (e.g. 11:00:00 when on UTC).
+OnCalendar=*-*-* 07:00:00 America/Caracas
+# Refresh a couple minutes after every boot — covers power returning mid-morning.
+OnBootSec=2min
+# Run a job that was missed while the machine was off, as soon as it is back.
+Persistent=true
+Unit=sfc-bcv-rate.service
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and test:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now sfc-bcv-rate.timer
+sudo systemctl start sfc-bcv-rate.service            # run once now
+journalctl -u sfc-bcv-rate.service --no-pager -n 20  # -> "fetch-bcv-rate: … = Bs. …/USD"
+systemctl list-timers sfc-bcv-rate.timer --no-pager  # shows next run + last run
+```
+
+Why a timer beats cron here: `Persistent=true` runs a missed daily fetch the moment
+the machine is back, `OnBootSec` refreshes shortly after every reboot, and the
+retry loop rides out a link that is briefly flaky after the power returns. A failed
+run leaves the previous rate in place (stale but present), and you can always set it
+by hand in **/admin → Tasa de cambio**.
+
+### 7c. Verify recovery
+
+After a test reboot (`sudo reboot`) — or the next real outage — nothing should need
+touching:
+
+```bash
+curl -s -o /dev/null -w 'site %{http_code}\n' http://printanet.ddns.net/php-sfc/
+curl -s "http://printanet.ddns.net/php-sfc/product.php?product=posters" | grep -A2 'class="app-footer"'
+```
+
+The site should answer **200** and the footer's "Cambio BCV de hoy" should show the
+current rate.
+
+> **Hardware complement:** a small UPS that lets the box shut down cleanly (or just
+> ride out short dips) spares the filesystem and database repeated unclean
+> power-offs. The software above recovers regardless, but a UPS reduces wear and the
+> chance of a longer fsck on boot.
+
+## 8. HTTPS (recommended)
 
 Saved-quote share links and the admin session cookie should travel over TLS. On
 a shared host this is usually managed for you; otherwise `certbot --apache`.
