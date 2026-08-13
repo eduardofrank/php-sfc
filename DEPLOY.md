@@ -18,14 +18,16 @@ These instructions use the real target: the code in
 
 ## 1. Put the code in its subdirectory (without the `.git` folder)
 
-Clone somewhere temporary, then copy the files into the project directory.
-Excluding `.git` keeps your repository history off the web server.
+Clone to `/var/tmp` (a durable scratch dir), then copy the files into the project
+directory. Excluding `.git` keeps your repository history off the web server. Use
+`/var/tmp`, **not** `/tmp` — on many systems `/tmp` is a tmpfs that is wiped on
+every reboot, which silently deletes the build clone between deploys.
 
 ```bash
-git clone https://github.com/eduardofrank/php-sfc.git /tmp/php-sfc-build
+git clone https://github.com/eduardofrank/php-sfc.git /var/tmp/php-sfc-build
 
 mkdir -p /var/www/localhost/htdocs/php-sfc
-rsync -a --exclude='.git' /tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
+rsync -a --exclude='.git' /var/tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
 ```
 
 The tracked `data/config/options.json` (your prices) ships with the clone, so
@@ -162,7 +164,7 @@ Sync the code (protecting runtime data), apply any schema, then **reload PHP** s
 the new code actually runs:
 
 ```bash
-git -C /tmp/php-sfc-build pull
+git -C /var/tmp/php-sfc-build pull
 
 rsync -a --delete \
   --exclude='.git' \
@@ -170,7 +172,7 @@ rsync -a --delete \
   --exclude='data/config/admin-password.php' \
   --exclude='data/config/db.php' \
   --exclude='data/config/options.json' \
-  /tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
+  /var/tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
 
 # Apply any new schema (idempotent; a no-op when nothing changed).
 php /var/www/localhost/htdocs/php-sfc/bin/db-migrate.php
