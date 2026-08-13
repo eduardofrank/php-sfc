@@ -171,10 +171,10 @@ first):
 
 ```bash
 sudo systemctl enable --now apache2
-systemctl list-unit-files | grep -i postgres        # e.g. postgresql-15.service
-sudo systemctl enable --now postgresql-15            # use the unit you found
+systemctl list-unit-files | grep -i postgres        # find the versioned unit(s)
+sudo systemctl enable --now postgresql-18            # use the live unit you found
 
-systemctl is-enabled apache2 postgresql-15           # -> enabled / enabled
+systemctl is-enabled apache2 postgresql-18           # -> enabled / enabled
 ```
 
 PostgreSQL is **crash-safe** (it replays its write-ahead log on start), so an
@@ -183,10 +183,43 @@ app also degrades gracefully: if the DB is briefly unavailable after boot, the
 calculator still prices from `options.json` and the footer simply omits the rate —
 never an error.
 
+> **Retire any stale PostgreSQL cluster — this is a real reboot hazard.** After a
+> major-version upgrade (e.g. 17 → 18) the old versioned unit is often left
+> **`enabled` but broken** (its data dir was migrated to the new cluster, so it has
+> nothing to serve). Two clusters can't both own port 5432, so on boot they *race*
+> for it; if the dead one wins, the app connects to an empty cluster and quotes
+> break until someone intervenes. Find out which cluster is real, then disable **and
+> mask** the other so it can never contend:
+>
+> ```bash
+> # which versions are installed/enabled, which is active, which owns 5432
+> systemctl list-unit-files | grep -i postgres
+> systemctl is-active postgresql-17 postgresql-18          # e.g. failed / active
+> sudo ss -ltnp | grep :5432                               # the live cluster's pid
+> # which cluster actually has the app database
+> for p in 5432 5433; do echo -n "port $p: "; sudo -u postgres psql -p "$p" \
+>   -tAc "SELECT datname FROM pg_database WHERE datname='sheetfedcalc'" 2>/dev/null; done
+>
+> # retire the stale one (example: 17 is the leftover; keep 18)
+> sudo systemctl disable --now postgresql-17.service
+> sudo systemctl mask postgresql-17.service                # -> symlinked to /dev/null
+> sudo systemctl reset-failed postgresql-17.service
+> ```
+>
+> Keep **only** the cluster that holds `sheetfedcalc` (the one your
+> `data/config/db.php` targets) enabled. `systemctl --failed` should be empty
+> afterward.
+
 ### 7b. Fetch the rate from a systemd timer (survives missed runs)
 
-Replace the cron entry from §6. First remove the old line (`sudo crontab -e`, delete
-the `fetch-bcv-rate` line), then:
+Replace the cron entry from §6. Remove the old line non-interactively (backs up the
+crontab automatically):
+
+```bash
+sudo crontab -l | grep -v 'fetch-bcv-rate' | sudo crontab -
+```
+
+Then: 
 
 Put the DB credentials in a root-only env file (keeps the password out of the unit):
 
@@ -206,8 +239,11 @@ Create the service — `/etc/systemd/system/sfc-bcv-rate.service`:
 ```ini
 [Unit]
 Description=Fetch daily BCV USD->VES rate
-Wants=network-online.target
-After=network-online.target postgresql-15.service
+# Order after the network and the LIVE PostgreSQL unit — use the versioned name you
+# kept in §7a (e.g. postgresql-18.service). No Wants= on network-online.target: that
+# needs a wait-online unit to be meaningful, and the retry loop below already covers
+# "network not up yet," so requiring it would only risk a boot delay.
+After=network-online.target postgresql-18.service
 
 [Service]
 Type=oneshot
