@@ -69,7 +69,7 @@ require __DIR__ . '/src/partials/head.php';
 ?>
 <header class="app-header">
     <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Lab&nbsp;Gráfico</a>
-    <a class="app-header__back" href="<?php echo $h( $b ); ?>/admin/quotes.php">Cotizaciones guardadas</a>
+    <a class="app-header__back" href="<?php echo $h( $b ); ?>/quotes.php">Cotizaciones guardadas</a>
 </header>
 
 <main class="app-main">

@@ -6,30 +6,15 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-require_once SFC_APP_DIR . '/src/admin/auth.php';
 
 $b     = SFC_BASE_PATH;
 $token = isset( $_GET['token'] ) ? sanitize_key( wp_unslash( $_GET['token'] ) ) : '';
-
-// Only treat the viewer as staff if an admin session cookie exists (avoids
-// starting a session for every client who opens a share link).
-$is_staff = isset( $_COOKIE['sfc_admin_sess'] ) && sfc_admin_is_logged_in();
 
 $quote = null;
 try {
     $quote = sfc_quotes_get_by_token( $token );
 } catch ( Throwable $e ) {
     $quote = null;
-}
-
-// Staff-only: re-stamp this quote to the current exchange rate, in place.
-if ( $quote && $is_staff && 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? 'GET' )
-    && 'update_rate' === ( $_POST['do'] ?? '' ) ) {
-    if ( sfc_admin_csrf_valid( $_POST['csrf'] ?? '' ) ) {
-        sfc_quotes_update_rate( (int) $quote['id'] );
-    }
-    header( 'Location: ' . $b . '/quote.php?token=' . rawurlencode( $token ) );
-    exit;
 }
 
 $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); };
@@ -43,8 +28,6 @@ $has_ves  = $ves_rate > 0;
 $ves = static function ( $usd ) use ( $ves_rate, $h ) {
     return $h( sfc_format_ves( (float) $usd, $ves_rate > 0 ? $ves_rate : null ) );
 };
-$current_rate = $is_staff ? sfc_current_usd_ves_rate() : null;
-$rate_stale   = $is_staff && $has_ves && $current_rate && abs( $current_rate - $ves_rate ) > 0.0001;
 
 $page_title  = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotización';
 $body_class  = 'page-quote';
@@ -119,19 +102,6 @@ require __DIR__ . '/src/partials/head.php';
                 </tr>
             </tfoot>
         </table>
-
-        <?php if ( $is_staff ) : ?>
-            <div class="quote-doc__rate-tools app-header--print-hide">
-                <?php if ( $rate_stale ) : ?>
-                    <span class="quote-doc__rate-stale">Emitida a <?php echo $h( sfc_format_rate( $ves_rate ) ); ?> / USD · hoy <?php echo $h( sfc_format_rate( $current_rate ) ); ?>.</span>
-                <?php endif; ?>
-                <form method="post">
-                    <input type="hidden" name="do" value="update_rate">
-                    <input type="hidden" name="csrf" value="<?php echo $h( sfc_admin_csrf_token() ); ?>">
-                    <button type="submit" class="quote-doc__rate-btn">Actualizar a la tasa de hoy</button>
-                </form>
-            </div>
-        <?php endif; ?>
 
         <?php if ( ! empty( $quote['notes'] ) ) : ?>
             <div class="quote-doc__notes">
