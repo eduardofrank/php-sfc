@@ -141,8 +141,8 @@ function sfc_get_producto_avanzado_product_config() {
             ),
             'sulfato' => array(
                 'label'     => array(
-                    'en' => 'Sulfate board',
-                    'es' => 'Sulfato',
+                    'en' => 'Sulfate board 014',
+                    'es' => 'Sulfato 014',
                 ),
                 'paperType' => 'sulfato',
             ),
