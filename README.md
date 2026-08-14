@@ -94,6 +94,7 @@ items, totals); products are how you add items to it.
 | `products.php` | Product picker — "add an item" (the ten-product grid) |
 | `product.php` | Per-product calculator; primary action **Add to quote** (`?from=&item=` seeds a saved item) |
 | `quote.php` | Read-only, printable **quote document** (`?token=`) |
+| `quotes.php` | **Quote browser** — search all quotes + re-stamp rate (public in trusted deploys); delete needs admin login |
 | `api/index.php` | JSON router: `sfc_calculate_product_quote`, `sfc_quote_add_item`/`remove_item`/`clear`/`draft`, `sfc_finalize_quote`, `sfc_client_names` |
 | `src/quote-draft.php` | Server-session draft basket + `sfc_draft_finalize()` |
 | `src/quotes-repo.php` | Clients + quote header/items data access |
@@ -101,7 +102,7 @@ items, totals); products are how you add items to it.
 | `src/includes/` | Pricing/config/steps engine, ported verbatim from the plugin |
 | `wp-shims.php` | Minimal WordPress primitives (`WP_Error`, `sanitize_key`, `get_option`→store, …) |
 | `src/app-helpers.php` | Landing/picker list, share + item URLs, JSON envelopes |
-| `admin/` | Password-protected price maintenance + quote browser |
+| `admin/` | Password-protected price tables + config maintenance |
 | `assets/js/` | Declarative calculator front-end (jQuery, ported) |
 | `assets/quote-ui.css` + `assets/fonts/` | Lab Gráfico visual layer (self-hosted Space Grotesk/Mono) for builder, picker, calculator, quote document |
 
@@ -125,9 +126,13 @@ finalize** (`YYYY-NNNN`, per-year number), so the document is a fixed, dated quo
   legacy single quotes to one item).
 - Connection resolves from `SFC_DB_*` env → gitignored `data/config/db.php` →
   DDEV defaults (`src/db.php`). Local dev uses DDEV's bundled Postgres 15.
-- `quote.php?token=` is the shareable/printable document; `/admin/quotes.php`
-  browses, searches, and deletes quotes. The server re-prices on add and finalize
-  and never trusts a client-supplied total.
+- `quote.php?token=` is the shareable/printable document; `quotes.php` browses and
+  searches all quotes. The server re-prices on add and finalize and never trusts a
+  client-supplied total.
+- **Access split** (trusted-shop deployment): browsing quotes and re-stamping a
+  quote's rate need **no password**; **deleting** a quote still requires the admin
+  login (button hidden and POST refused otherwise). Only the price tables and the
+  rest of `/admin` stay behind the login. All state-changing POSTs are CSRF-guarded.
 
 ## Dual currency (USD + VES)
 
@@ -141,8 +146,8 @@ Pricing stays in USD (the source of truth); VES is a display conversion.
 - A finalized quote **freezes** its issue-time rate (`sfc_quotes.ves_rate`/
   `total_ves`), so a sent quote's Bs. total is fixed — mirroring the frozen USD
   prices. Staff can **re-stamp a quote to the current rate in place** (same number,
-  same USD) from `/admin/quotes.php` or the document (when logged in) via
-  `sfc_quotes_update_rate()`.
+  same USD) from the `quotes.php` browser via `sfc_quotes_update_rate()`. The shared
+  `quote.php` document stays read-only for clients.
 - No rate yet → the app shows USD only (VES hidden), never an error.
 
 ## Maintaining prices
