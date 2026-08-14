@@ -414,6 +414,10 @@ function sfc_get_string_map() {
             'en' => 'Bond paper',
             'es' => 'Papel bond',
         ),
+        'paper_sulfato' => array(
+            'en' => 'Sulfate board',
+            'es' => 'Sulfato',
+        ),
         'surface_matte' => array(
             'en' => 'Matte',
             'es' => 'Mate',

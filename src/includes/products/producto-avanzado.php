@@ -139,6 +139,13 @@ function sfc_get_producto_avanzado_product_config() {
                 'paperType' => 'coated',
                 'gsm'       => 300,
             ),
+            'sulfato' => array(
+                'label'     => array(
+                    'en' => 'Sulfate board',
+                    'es' => 'Sulfato',
+                ),
+                'paperType' => 'sulfato',
+            ),
             'lithosticker' => array(
                 'label'     => array(
                     'en' => 'Lithosticker',
@@ -191,6 +198,7 @@ function sfc_get_producto_avanzado_product_config() {
             'gsm200'       => array( '4x0', '4x4' ),
             'gsm250'       => array( '4x0', '4x4' ),
             'gsm300'       => array( '4x0', '4x4' ),
+            'sulfato'      => array( '4x0', '4x4' ),
             'lithosticker' => array( '4x0' ),
             'vinyl'        => array( '4x0' ),
         ),

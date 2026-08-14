@@ -235,6 +235,11 @@ function sfc_get_default_paper_catalog() {
             'duplex'    => true,
             'table_id'  => 'coated_115_150',
         ),
+        'sulfato' => array(
+            'label_key' => 'paper_sulfato',
+            'duplex'    => true,
+            'table_id'  => 'coated_200_300',
+        ),
     );
 }
 
