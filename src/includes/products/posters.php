@@ -15,7 +15,7 @@ function sfc_get_posters_product_config() {
         'language'          => 'es',
         'printMode'         => '4x0',
         'minQuantity'       => 1,
-        'defaultQuantity'   => 5,
+        'defaultQuantity'   => 1,
         'requireSelection'  => array( 'paper', 'finish' ),
         'sizes'             => array(
             '450x310' => array(
@@ -122,7 +122,7 @@ function sfc_get_posters_product_config() {
         ),
         'defaults'          => array(
             'size'       => '450x310',
-            'quantity'   => 5,
+            'quantity'   => 1,
             'printMode'  => '4x0',
             'turnaround' => 'next_day',
         ),
