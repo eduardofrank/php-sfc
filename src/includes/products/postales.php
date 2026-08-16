@@ -15,6 +15,7 @@ function sfc_get_postales_product_config() {
         'language'        => 'es',
         'minQuantity'     => 9,
         'defaultQuantity' => 9,
+        'emptyQuantityOnCustomSize' => true,
         'customDimensionLimits' => array(
             'minWidthMm'  => 50,
             'minHeightMm' => 50,

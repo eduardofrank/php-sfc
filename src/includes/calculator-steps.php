@@ -22,10 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   required       Step must hold a valid value before quoting.
  *   quoteImmediate Fetch a quote immediately on change (skip debounce).
  *   helpKeys       Product string keys rendered as help paragraphs.
+ *   helpWhen       AND-group of conditions gating the help paragraphs.
  *   noticeKey      Product string key rendered as a notice paragraph.
  *   noticeWhen     AND-group of conditions gating the notice.
  *   visibleWhen    AND-group of conditions gating the step.
  *   visibleWhenAny OR-list of AND-groups gating the step.
+ *   clearFieldsWhen Map of selected option value => state fields to clear.
  *   inputId        Fixed DOM id for number inputs (event handlers bind to it).
  *   min/max/step   Number input attributes.
  *   multipleOf     Number readiness requires value % multipleOf === 0.
@@ -193,7 +195,7 @@ function sfc_build_flat_product_steps( $product ) {
     }
 
     if ( ! $die_cut && ! $custom_only ) {
-        $steps[] = array(
+        $size_step = array(
             'key'            => 'size',
             'type'           => 'options',
             'field'          => 'size',
@@ -210,6 +212,14 @@ function sfc_build_flat_product_steps( $product ) {
                 ),
             ),
         );
+
+        if ( ! empty( $product['emptyQuantityOnCustomSize'] ) ) {
+            $size_step['clearFieldsWhen'] = array(
+                'custom' => array( 'quantity' ),
+            );
+        }
+
+        $steps[] = $size_step;
     }
 
     if ( ! $die_cut && ( $custom_only || sfc_product_has_custom_size( $product ) ) ) {
@@ -234,7 +244,7 @@ function sfc_build_flat_product_steps( $product ) {
         $steps[] = $custom_step;
     }
 
-    $steps[] = array(
+    $quantity_step = array(
         'key'           => 'quantity',
         'type'          => 'number',
         'field'         => 'quantity',
@@ -246,6 +256,17 @@ function sfc_build_flat_product_steps( $product ) {
         'required'      => true,
         'helpKeys'      => array( 'quantity_help' ),
     );
+
+    if ( ! empty( $product['emptyQuantityOnCustomSize'] ) ) {
+        $quantity_step['helpWhen'] = array(
+            array(
+                'field' => 'size',
+                'notIn' => array( 'custom' ),
+            ),
+        );
+    }
+
+    $steps[] = $quantity_step;
 
     if ( ! empty( $product['papers'] ) && is_array( $product['papers'] ) ) {
         $steps[] = array(

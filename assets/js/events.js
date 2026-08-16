@@ -100,12 +100,30 @@
       SFC.state[field] = value;
       SFC.quote = null;
 
+      var step = SFC.events.stepForField(field);
+      if (step && step.clearFieldsWhen && step.clearFieldsWhen[value]) {
+        var fields = step.clearFieldsWhen[value];
+        var i;
+        for (i = 0; i < fields.length; i++) {
+          delete SFC.state[fields[i]];
+        }
+      }
+
+      if (
+        field === 'size' &&
+        value !== 'custom' &&
+        SFC.state.quantity == null &&
+        SFC.data.defaults &&
+        SFC.data.defaults.quantity != null
+      ) {
+        SFC.state.quantity = SFC.data.defaults.quantity;
+      }
+
       SFC.events.pruneState();
 
       SFC.render.page();
       clearTimeout(SFC.quoteTimer);
 
-      var step = SFC.events.stepForField(field);
       if (step && step.quoteImmediate) {
         SFC.quoteApi.fetch();
         return;

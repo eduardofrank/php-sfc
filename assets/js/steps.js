@@ -83,6 +83,10 @@
     },
 
     helpParagraphs: function (step) {
+      if (step.helpWhen && !SFC.steps.groupMet(step.helpWhen)) {
+        return '';
+      }
+
       var keys = step.helpKeys || [];
       var html = '';
       var i;
