@@ -320,13 +320,17 @@ function sfc_build_booklet_pricing_args( $paper, $sheet_quantity, $print_mode ) 
 /**
  * Apply cover lamination based on cover finish and side selection.
  *
+ * Sides come from the lamination choice (external = 1, both = 2), not from
+ * the cover print mode — a 4x0 cover can still be laminated on both faces.
+ * Quantity is finished covers (one flat cover per booklet), not imposed
+ * press sheets.
+ *
  * @param array<string,mixed> $state          Calculator state.
  * @param array<string,mixed> $pricing        Print pricing result.
- * @param int                 $sheet_quantity Cover press sheets.
- * @param string              $print_mode     Cover print mode.
+ * @param int                 $cover_quantity Finished covers (booklet quantity).
  * @return array<string,mixed>|WP_Error
  */
-function sfc_apply_booklet_cover_lamination( $state, $pricing, $sheet_quantity, $print_mode ) {
+function sfc_apply_booklet_cover_lamination( $state, $pricing, $cover_quantity ) {
     if ( ! is_array( $pricing ) ) {
         return $pricing;
     }
@@ -336,32 +340,30 @@ function sfc_apply_booklet_cover_lamination( $state, $pricing, $sheet_quantity, 
         return $pricing;
     }
 
-    $sheet_quantity = absint( $sheet_quantity );
-    if ( $sheet_quantity <= 0 ) {
+    $cover_quantity = absint( $cover_quantity );
+    if ( $cover_quantity <= 0 ) {
         return $pricing;
     }
 
     $finish_sides = sanitize_key( $state['coverFinishSides'] ?? 'external' );
-    $sides        = 'both' === $finish_sides
-        ? sfc_get_lamination_sides_for_print_mode( $print_mode )
-        : 1;
+    $sides        = 'both' === $finish_sides ? 2 : 1;
 
-    $rate = sfc_get_lamination_price_per_sheet_side( $sheet_quantity );
+    $rate = sfc_get_lamination_price_per_sheet_side( $cover_quantity );
     if ( is_wp_error( $rate ) ) {
         return $rate;
     }
 
     $print_total = (float) $pricing['totalPrice'];
-    $lam_amount  = round( $sheet_quantity * $sides * (float) $rate, 2 );
+    $lam_amount  = round( $cover_quantity * $sides * (float) $rate, 2 );
     $total       = round( $print_total + $lam_amount, 2 );
 
     $pricing['printTotalPrice']         = $print_total;
     $pricing['laminationPricePerSide']  = (float) $rate;
     $pricing['laminationSidesPerSheet'] = $sides;
-    $pricing['laminationSheetQuantity'] = $sheet_quantity;
+    $pricing['laminationSheetQuantity'] = $cover_quantity;
     $pricing['laminationAmount']        = $lam_amount;
     $pricing['totalPrice']              = $total;
-    $pricing['unitPrice']               = round( $total / $sheet_quantity, 2 );
+    $pricing['unitPrice']               = round( $total / $cover_quantity, 2 );
 
     return $pricing;
 }
@@ -379,7 +381,7 @@ function sfc_merge_booklet_pricing( $inner_pricing, $cover_pricing, $total_sheet
     $cover_total = (float) ( $cover_pricing['totalPrice'] ?? 0 );
     $total       = round( $inner_total + $cover_total, 2 );
 
-    return array(
+    $merged = array(
         'totalPrice'      => $total,
         'unitPrice'       => $total_sheets > 0 ? round( $total / $total_sheets, 2 ) : 0.0,
         'innerPricing'    => $inner_pricing,
@@ -388,6 +390,15 @@ function sfc_merge_booklet_pricing( $inner_pricing, $cover_pricing, $total_sheet
         'coverTotalPrice' => $cover_total,
         'printMode'       => $inner_pricing['printMode'] ?? '4x4',
     );
+
+    if ( ! empty( $cover_pricing['laminationAmount'] ) ) {
+        $merged['laminationAmount']        = (float) $cover_pricing['laminationAmount'];
+        $merged['laminationPricePerSide']  = (float) ( $cover_pricing['laminationPricePerSide'] ?? 0 );
+        $merged['laminationSidesPerSheet'] = (int) ( $cover_pricing['laminationSidesPerSheet'] ?? 0 );
+        $merged['laminationSheetQuantity'] = (int) ( $cover_pricing['laminationSheetQuantity'] ?? 0 );
+    }
+
+    return $merged;
 }
 
 /**
@@ -665,8 +676,7 @@ function sfc_calculate_booklet_quote( $slug, $state ) {
     $cover_pricing = sfc_apply_booklet_cover_lamination(
         $state,
         $cover_pricing,
-        (int) $cover_imposition['sheetQuantity'],
-        $cover_mode
+        $cover_flat_sheets
     );
 
     if ( is_wp_error( $cover_pricing ) ) {
