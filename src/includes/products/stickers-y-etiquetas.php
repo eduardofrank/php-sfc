@@ -16,9 +16,9 @@ function sfc_get_stickers_y_etiquetas_product_config() {
         'printMode'              => '4x0',
         'minQuantity'            => 1,
         'emptyDefaultQuantity'   => true,
-        // Cut + tiered die-cut (25/20/15% by press-sheet count). 'die_cutting'
-        // routes to the tiered die-cut rate system, not a flat job-service %.
-        'jobServices'            => array( 'cutting', 'die_cutting' ),
+        // Tiered die-cut only (25/20/15% of print by press-sheet count).
+        // 'die_cutting' uses the die-cut rate system, not a flat job-service %.
+        'jobServices'            => array( 'die_cutting' ),
         'requireSelection'       => array( 'die_cut_shape', 'paper' ),
         'customDimensionLimits'  => array(
             'minWidthMm'  => 50,
