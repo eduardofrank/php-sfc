@@ -17,6 +17,7 @@ function sfc_get_etiquetas_rectangulares_product_config() {
         'minQuantity'            => 1,
         'emptyDefaultQuantity'   => true,
         'customDimensionsOnly'   => true,
+        'jobServices'            => array( 'cutting' ),
         'requireSelection'       => array( 'paper' ),
         'customDimensionLimits'  => array(
             'minWidthMm'  => 50,
