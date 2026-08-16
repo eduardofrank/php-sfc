@@ -13,8 +13,6 @@ function sfc_get_postales_product_config() {
         'slug'            => 'postales',
         'shortcode'       => 'postales_calculator',
         'language'        => 'es',
-        'paperType'       => 'coated',
-        'gsm'             => 300,
         'minQuantity'     => 9,
         'defaultQuantity' => 9,
         'customDimensionLimits' => array(
@@ -39,6 +37,23 @@ function sfc_get_postales_product_config() {
                 ),
                 'widthMm'  => 0,
                 'heightMm' => 0,
+            ),
+        ),
+        'papers'          => array(
+            'gsm300' => array(
+                'label'     => array(
+                    'en' => 'Coated 300 GSM',
+                    'es' => 'Papel recubierto 300 g',
+                ),
+                'paperType' => 'coated',
+                'gsm'       => 300,
+            ),
+            'sulfato' => array(
+                'label'     => array(
+                    'en' => 'Sulfate board 014',
+                    'es' => 'Sulfato 014',
+                ),
+                'paperType' => 'sulfato',
             ),
         ),
         'surfaces'        => array(
@@ -87,6 +102,7 @@ function sfc_get_postales_product_config() {
         'defaults'        => array(
             'size'       => '140x100',
             'quantity'   => 9,
+            'paper'      => 'gsm300',
             'surface'    => 'matte',
             'printMode'  => '4x0',
             'turnaround' => 'next_day',
