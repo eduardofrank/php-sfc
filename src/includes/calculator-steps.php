@@ -30,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   clearFieldsWhen Map of selected option value => state fields to clear.
  *   inputId        Fixed DOM id for number inputs (event handlers bind to it).
  *   min/max/step   Number input attributes.
+ *   customSizeMin  Number min while size is custom (overrides min).
  *   multipleOf     Number readiness requires value % multipleOf === 0.
  *   textFrom       Bootstrap data key shown by static-option steps.
  *
@@ -264,6 +265,7 @@ function sfc_build_flat_product_steps( $product ) {
                 'notIn' => array( 'custom' ),
             ),
         );
+        $quantity_step['customSizeMin'] = 1;
     }
 
     $steps[] = $quantity_step;

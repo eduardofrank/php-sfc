@@ -207,6 +207,30 @@ function sfc_product_has_custom_size( $product ) {
 }
 
 /**
+ * Minimum finished-unit quantity for a quote.
+ *
+ * Custom size can drop a preset floor (e.g. Postales' 9) so any count is
+ * allowed; imposition still warns about unused slots on the sheet.
+ *
+ * @param array<string,mixed> $product Product config.
+ * @param array<string,mixed> $state   Calculator state.
+ * @return int
+ */
+function sfc_product_min_quantity( $product, $state = array() ) {
+    $min = absint( $product['minQuantity'] ?? 1 );
+    if ( $min < 1 ) {
+        $min = 1;
+    }
+
+    $size = is_array( $state ) ? sanitize_key( str_replace( '_', '-', (string) ( $state['size'] ?? '' ) ) ) : '';
+    if ( 'custom' === $size && ! empty( $product['emptyQuantityOnCustomSize'] ) ) {
+        return 1;
+    }
+
+    return $min;
+}
+
+/**
  * Whether custom dimensions fit configured min/max bounds in either orientation.
  *
  * @param float               $width_mm  First edge in millimeters.
@@ -586,9 +610,9 @@ function sfc_calculate_product_quote( $slug, $state ) {
         return new WP_Error( 'invalid_print_mode', 'Selección de caras impresas no válida.' );
     }
 
-    $min_quantity = absint( $product['minQuantity'] ?? 1 );
+    $min_quantity = sfc_product_min_quantity( $product, $state );
     if ( $quantity < $min_quantity ) {
-        if ( ! empty( $product['emptyDefaultQuantity'] ) && 0 === $quantity ) {
+        if ( 0 === $quantity && ( ! empty( $product['emptyDefaultQuantity'] ) || ( 'custom' === $size && ! empty( $product['emptyQuantityOnCustomSize'] ) ) ) ) {
             return new WP_Error( 'selection_required', 'Complete todas las opciones requeridas.' );
         }
 

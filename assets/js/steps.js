@@ -74,9 +74,17 @@
       return SFC.strings[step.labelKey] || step.labelFallback || '';
     },
 
+    numberMin: function (step) {
+      if (step.customSizeMin != null && SFC.state.size === 'custom') {
+        return step.customSizeMin;
+      }
+      return step.min;
+    },
+
     helpTemplateVars: function (step) {
+      var min = SFC.steps.numberMin(step);
       return {
-        min: step.min != null ? step.min : SFC.data.minQuantity,
+        min: min != null ? min : SFC.data.minQuantity,
         max: step.max,
         units: SFC.stateApi.selectedUnitsPerSheet(),
       };
@@ -255,6 +263,7 @@
         SFC.state[step.field] != null && SFC.state[step.field] !== ''
           ? SFC.state[step.field]
           : '';
+      var min = SFC.steps.numberMin(step);
 
       return (
         '<div class="sfc__section"><span class="sfc__label">' +
@@ -262,7 +271,7 @@
         '</span><input id="' +
         utils.esc(step.inputId || 'sfc-' + step.field) +
         '" class="sfc__input" type="number"' +
-        (step.min != null ? ' min="' + utils.esc(step.min) + '"' : '') +
+        (min != null ? ' min="' + utils.esc(min) + '"' : '') +
         (step.max != null ? ' max="' + utils.esc(step.max) + '"' : '') +
         ' step="' +
         utils.esc(step.step != null ? step.step : 1) +

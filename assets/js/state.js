@@ -46,7 +46,7 @@
           if (isNaN(num)) {
             return false;
           }
-          if (step.min != null && num < step.min) {
+          if (step.min != null && num < SFC.steps.numberMin(step)) {
             return false;
           }
           if (step.max != null && num > step.max) {
