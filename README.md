@@ -22,7 +22,7 @@ imposition → tiered per-sheet price table → lamination / die-cut / job servi
 Lamination is billed per press-sheet side; **job services are a percentage of the
 print cost** (lamination is a separate line). Job services are **per-product**,
 set via each product's `jobServices`: business cards are only cut, folded
-brochures are cut + creased, booklets stapled, albums cut + stapled.
+brochures are cut + creased, booklets cut + creased + stapled, albums cut + stapled.
 
 **Die-cutting** is configured the same way — add `die_cutting` to a product's
 `jobServices` and any product gets it — but it is priced through the **tiered
@@ -36,7 +36,7 @@ Three pipelines, dispatched by `sfc_calculate_product_quote()`:
 - **flat** — letterhead, business cards, posters, postcards, flyers, rectangular
   stickers, die-cut stickers, the six folded-brochure variants, and **Producto
   Avanzado**
-- **booklet** — catalogs & magazines (saddle-stitch, inner + cover runs)
+- **booklet** — catalogs & magazines (saddle-stitch, inner + cover runs, cut + crease + staple)
 - **album** — hardcover albums (duplex sheets + cutting/stapling + $25/album binding)
 
 The browser never prices: it POSTs the form state to `api/index.php` and renders
@@ -199,8 +199,9 @@ the app connects with DDEV's default credentials automatically (`src/db.php`).
 
 Full server setup and the live-update flow are in **[DEPLOY.md](DEPLOY.md)**. Most
 changes — new products, calculator steps, labels/copy, pricing logic, JS/CSS —
-touch no database schema, so a **code-only deploy** is just **pull → rsync → reload
-PHP** (`db-migrate.php` is a no-op and can be skipped). Run the migration only when
+touch no database schema, so a **code-only deploy** is just **pull → rsync →
+`chown -R apache:apache …/data` → reload PHP** (`db-migrate.php` is a no-op and
+can be skipped). Run the migration only when
 a change alters the schema block in `bin/db-migrate.php` (a new table/column); it is
 idempotent, so running it always is safe. Either way, **reloading PHP (opcache) is
 mandatory** — skipping it serves the old bytecode.

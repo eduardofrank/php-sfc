@@ -676,7 +676,7 @@ function sfc_calculate_booklet_quote( $slug, $state ) {
     $total_sheets = (int) $inner_imposition['sheetQuantity'] + (int) $cover_imposition['sheetQuantity'];
     $pricing      = sfc_merge_booklet_pricing( $inner_pricing, $cover_pricing, $total_sheets );
 
-    $job_services = (array) ( $product['jobServices'] ?? array( 'stapling' ) );
+    $job_services = (array) ( $product['jobServices'] ?? array( 'cutting', 'creasing', 'stapling' ) );
     $pricing      = sfc_apply_job_service_pricing( $pricing, $total_sheets, $job_services, $print_base );
 
     $pricing = sfc_apply_turnaround_surcharge( $product, $state, $pricing );

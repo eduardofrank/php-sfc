@@ -20,7 +20,8 @@ function sfc_get_catalogos_y_revistas_product_config() {
         'minQuantity'            => 1,
         'emptyDefaultQuantity'   => true,
         'innerPrintMode'         => '4x4',
-        'jobServices'            => array( 'stapling' ),
+        // Cut, crease, and staple — each a % of the combined inner+cover print cost.
+        'jobServices'            => array( 'cutting', 'creasing', 'stapling' ),
         'suppressImpositionWasteUi' => true,
         'customDimensionLimits'  => array(
             'minWidthMm'  => 50,
