@@ -165,12 +165,12 @@ function sfc_calculate_album_quote( $slug, $state ) {
         return $pricing;
     }
 
-    // Inner-page job services (cutting, etc.) are a % of the print cost, applied
-    // BEFORE the per-album hardcover binding fee.
+    // Inner-page job services (cutting + stapling) are a % of the print cost,
+    // applied BEFORE the per-album hardcover binding fee ($25).
     $print_base    = (float) ( $pricing['totalPrice'] ?? 0 );
     $services      = ( isset( $product['jobServices'] ) && is_array( $product['jobServices'] ) )
         ? $product['jobServices']
-        : array( 'cutting' );
+        : array( 'cutting', 'stapling' );
     $flat_services = array_values( array_diff( $services, array( 'die_cutting' ) ) );
     $pricing = sfc_apply_job_service_pricing( $pricing, (int) $imposition['sheetQuantity'], $flat_services, $print_base );
 

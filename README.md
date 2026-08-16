@@ -22,7 +22,7 @@ imposition → tiered per-sheet price table → lamination / die-cut / job servi
 Lamination is billed per press-sheet side; **job services are a percentage of the
 print cost** (lamination is a separate line). Job services are **per-product**,
 set via each product's `jobServices`: business cards are only cut, folded
-brochures are cut + creased, booklets stapled.
+brochures are cut + creased, booklets stapled, albums cut + stapled.
 
 **Die-cutting** is configured the same way — add `die_cutting` to a product's
 `jobServices` and any product gets it — but it is priced through the **tiered
@@ -37,7 +37,7 @@ Three pipelines, dispatched by `sfc_calculate_product_quote()`:
   stickers, die-cut stickers, the six folded-brochure variants, and **Producto
   Avanzado**
 - **booklet** — catalogs & magazines (saddle-stitch, inner + cover runs)
-- **album** — hardcover albums (duplex sheets + per-album binding fee)
+- **album** — hardcover albums (duplex sheets + cutting/stapling + $25/album binding)
 
 The browser never prices: it POSTs the form state to `api/index.php` and renders
 the returned quote. The server is the single source of truth (saving a quote

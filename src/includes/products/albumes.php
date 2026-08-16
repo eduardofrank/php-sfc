@@ -15,8 +15,8 @@ function sfc_get_albumes_product_config() {
         'language'               => 'es',
         'jobType'                => 'album',
         'printMode'              => '4x4',
-        // Inner pages are cut (% of print cost), billed before hardcover binding.
-        'jobServices'            => array( 'cutting' ),
+        // Inner pages are cut and stapled (% of print cost), billed before hardcover binding.
+        'jobServices'            => array( 'cutting', 'stapling' ),
         'minQuantity'            => 1,
         'emptyDefaultQuantity'   => true,
         'minPages'               => 2,
