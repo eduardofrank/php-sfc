@@ -78,17 +78,35 @@
             return;
           }
 
-          if (step.type !== 'options' || !step.field || SFC.state[step.field] == null) {
+          if (step.type !== 'options' || !step.field) {
             return;
           }
 
           if (!visible) {
-            delete SFC.state[step.field];
-            changed = true;
+            if (SFC.state[step.field] != null) {
+              delete SFC.state[step.field];
+              changed = true;
+            }
             return;
           }
 
-          if (!SFC.steps.optionsForStep(step)[SFC.state[step.field]]) {
+          var opts = SFC.steps.optionsForStep(step);
+          var keys = Object.keys(opts);
+          var current = SFC.state[step.field];
+
+          if (current != null && opts[current]) {
+            return;
+          }
+
+          if (keys.length === 1) {
+            if (current !== keys[0]) {
+              SFC.state[step.field] = keys[0];
+              changed = true;
+            }
+            return;
+          }
+
+          if (current != null) {
             delete SFC.state[step.field];
             changed = true;
           }

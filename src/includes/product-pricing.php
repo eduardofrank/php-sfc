@@ -83,14 +83,40 @@ function sfc_resolve_size_imposition( $width_mm, $height_mm, $quantity, $size_cf
  * @return string
  */
 function sfc_resolve_product_print_mode( $product, $state ) {
-    if ( ! empty( $product['printModes'] ) && is_array( $product['printModes'] ) ) {
+    $print_modes = ( isset( $product['printModes'] ) && is_array( $product['printModes'] ) )
+        ? $product['printModes']
+        : array();
+
+    $allowed = $print_modes;
+    if ( ! empty( $product['printModesByPaper'] ) && is_array( $product['printModesByPaper'] ) ) {
+        $paper_key = sanitize_key( $state['paper'] ?? '' );
+        $mode_keys = ( isset( $product['printModesByPaper'][ $paper_key ] ) && is_array( $product['printModesByPaper'][ $paper_key ] ) )
+            ? $product['printModesByPaper'][ $paper_key ]
+            : array();
+        $subset    = array();
+        foreach ( $mode_keys as $mode_key ) {
+            $mode_key = sanitize_key( $mode_key );
+            if ( isset( $print_modes[ $mode_key ] ) ) {
+                $subset[ $mode_key ] = $print_modes[ $mode_key ];
+            }
+        }
+        if ( $subset ) {
+            $allowed = $subset;
+        }
+    }
+
+    if ( $allowed ) {
         $mode = sanitize_key( $state['printMode'] ?? '' );
-        if ( isset( $product['printModes'][ $mode ] ) ) {
+        if ( isset( $allowed[ $mode ] ) ) {
             return $mode;
         }
 
+        if ( 1 === count( $allowed ) ) {
+            return (string) array_key_first( $allowed );
+        }
+
         $default = sanitize_key( $product['defaults']['printMode'] ?? '4x0' );
-        return isset( $product['printModes'][ $default ] ) ? $default : '4x0';
+        return isset( $allowed[ $default ] ) ? $default : (string) array_key_first( $allowed );
     }
 
     return sfc_get_product_print_mode( $product );
@@ -606,8 +632,21 @@ function sfc_calculate_product_quote( $slug, $state ) {
         return new WP_Error( 'invalid_surface', 'Selección de acabado del papel no válida.' );
     }
 
-    if ( ! empty( $product['printModes'] ) && ! isset( $product['printModes'][ $state['printMode'] ?? '' ] ) ) {
-        return new WP_Error( 'invalid_print_mode', 'Selección de caras impresas no válida.' );
+    if ( ! empty( $product['printModes'] ) ) {
+        $print_mode = sanitize_key( $state['printMode'] ?? '' );
+        if ( ! isset( $product['printModes'][ $print_mode ] ) ) {
+            return new WP_Error( 'invalid_print_mode', 'Selección de caras impresas no válida.' );
+        }
+
+        if ( ! empty( $product['printModesByPaper'] ) && is_array( $product['printModesByPaper'] ) ) {
+            $paper_key    = sanitize_key( $state['paper'] ?? '' );
+            $allowed_keys = ( isset( $product['printModesByPaper'][ $paper_key ] ) && is_array( $product['printModesByPaper'][ $paper_key ] ) )
+                ? array_map( 'sanitize_key', $product['printModesByPaper'][ $paper_key ] )
+                : array();
+            if ( $allowed_keys && ! in_array( $print_mode, $allowed_keys, true ) ) {
+                return new WP_Error( 'invalid_print_mode', 'Selección de caras impresas no válida.' );
+            }
+        }
     }
 
     $min_quantity = sfc_product_min_quantity( $product, $state );
