@@ -39,6 +39,7 @@ require __DIR__ . '/src/partials/head.php';
     <a class="app-header__brand" href="<?php echo $h( $b ); ?>/">Lab&nbsp;Gráfico</a>
     <?php if ( $quote ) : ?>
         <div class="app-header__actions">
+            <a class="app-header__back" href="<?php echo $h( $b ); ?>/quotes.php">Cotizaciones guardadas</a>
             <button type="button" class="app-header__back" onclick="window.print()">Imprimir</button>
             <a class="app-header__back" href="<?php echo $h( $b ); ?>/">Nueva cotización</a>
         </div>
