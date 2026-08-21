@@ -179,8 +179,10 @@ function sfc_admin_save_sheet() {
  * @return string
  */
 function sfc_admin_write_error() {
-    return 'No se pudo guardar. Verifique que el servidor web pueda escribir en '
-        . 'data/config/options.json (permisos de data/config/).';
+    $detail = function_exists( 'sfc_options_persist_error' ) ? sfc_options_persist_error() : '';
+    $base   = 'No se pudo guardar. En el servidor: '
+        . 'chown -R apache:apache /var/www/localhost/htdocs/php-sfc/data';
+    return '' !== $detail ? $base . ' ' . $detail : $base;
 }
 
 /**

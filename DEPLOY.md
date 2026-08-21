@@ -35,16 +35,18 @@ the calculator has its price tables immediately.
 
 ## 2. Make the runtime directories writable by the web server user
 
-On Alpine the Apache user is **`apache`**; on Debian/Ubuntu it is **`www-data`**
-(check with `ps -o user= -C httpd` or `ps -o user= -C apache2`). The server
-writes saved quotes and the price config under `data/`:
+This host runs PHP as **`apache`**. The server writes saved quotes and the
+price config under `data/`, so that tree must be owned by `apache` (a `644`
+file owned by root still cannot be saved from `/admin`):
 
 ```bash
 chown -R apache:apache /var/www/localhost/htdocs/php-sfc/data
 find /var/www/localhost/htdocs/php-sfc/data -type d -exec chmod 775 {} \;
 ```
 
-Everything outside `data/` can stay read-only to the web user.
+Re-run the `chown` after every deploy — `rsync` as root resets `data/`
+ownership even when `options.json` is excluded. Everything outside `data/`
+can stay read-only to the web user.
 
 ## 3. Set the admin password
 
@@ -329,6 +331,9 @@ rsync -a --delete \
   --exclude='data/config/options.json' \
   /var/tmp/php-sfc-build/ /var/www/localhost/htdocs/php-sfc/
 
+# rsync as root resets data/ to root:root; PHP cannot save prices until this runs.
+chown -R apache:apache /var/www/localhost/htdocs/php-sfc/data
+
 # Apply any new schema (idempotent; a no-op when nothing changed).
 php /var/www/localhost/htdocs/php-sfc/bin/db-migrate.php
 
@@ -341,7 +346,7 @@ systemctl restart apache2        # mod_php / mod_fcgid: PHP runs inside Apache
 
 Most changes — new products, calculator steps, labels/copy, pricing logic, JS/CSS
 — touch **no database schema**, so `db-migrate.php` is a **no-op** and the deploy
-is just: **pull → rsync → reload PHP**. The migrate step is always safe to run
+is just: **pull → rsync → chown data → reload PHP**. The migrate step is always safe to run
 (idempotent), so leaving it in the routine costs nothing; only skip it if you want
 the shortest path and know the change added no `CREATE TABLE`/`ALTER TABLE` in
 `bin/db-migrate.php`.
@@ -390,12 +395,14 @@ curl -s http://your-host/php-sfc/_oc.php && rm -f /var/www/localhost/htdocs/php-
 **excludes** it, so deploys never overwrite what you set in the live **/admin** —
 i.e. you manage pricing on the server. For that to work:
 
-- keep `data/config/` writable by the web user (see step 2), or admin saves fail
-  and the value silently reverts. The admin now shows a "no se pudo guardar"
-  error when it cannot write — if you see that, fix the permissions;
+- after every `rsync`, run
+  `chown -R apache:apache /var/www/localhost/htdocs/php-sfc/data`
+  (see step 2). Without that, `/admin` cannot write `options.json` and the
+  value silently reverts. The admin shows a "no se pudo guardar" error when
+  it cannot write;
 - values are **per field**: a stray number in one row (e.g. cutting = 15 instead
   of 10) only affects that service. Business cards are only *cut*; folded
-  brochures are *cut + creased*; booklets *stapled*.
+  brochures are *cut + creased*; booklets *cut + creased + stapled*.
 
 To instead manage pricing **in git**, drop the `options.json` exclude and edit +
 commit the file in the repo; then don't change prices on the server.

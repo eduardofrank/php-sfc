@@ -59,6 +59,19 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
         </div>
     <?php endif; ?>
 
+    <?php if ( function_exists( 'sfc_options_store_is_writable' ) && ! sfc_options_store_is_writable() ) : ?>
+        <div class="adm-flash adm-flash--err">
+            <?php
+            echo $h(
+                'El servidor no puede guardar precios: '
+                . ( function_exists( 'sfc_options_persist_diagnose' )
+                    ? sfc_options_persist_diagnose( sfc_options_store_file(), dirname( sfc_options_store_file() ) )
+                    : 'data/config/options.json no es escribible.' )
+            );
+            ?>
+        </div>
+    <?php endif; ?>
+
     <p class="adm-intro">
         Los precios están en USD. Los cambios se aplican de inmediato a la calculadora
         y se guardan en <code>data/config/options.json</code> (versionado en git).

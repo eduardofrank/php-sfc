@@ -152,27 +152,140 @@ if ( ! function_exists( 'sfc_options_store' ) ) {
     }
 }
 
+if ( ! function_exists( 'sfc_options_persist_error' ) ) {
+    /**
+     * Last persist failure detail (empty when the previous write succeeded).
+     *
+     * @return string
+     */
+    function sfc_options_persist_error() {
+        return (string) ( $GLOBALS['__sfc_options_persist_error'] ?? '' );
+    }
+}
+
+if ( ! function_exists( 'sfc_options_store_is_writable' ) ) {
+    /**
+     * Whether the PHP process can persist options.json (file or its directory).
+     *
+     * @return bool
+     */
+    function sfc_options_store_is_writable() {
+        $file = sfc_options_store_file();
+        $dir  = dirname( $file );
+        return ( is_file( $file ) && is_writable( $file ) )
+            || ( is_dir( $dir ) && is_writable( $dir ) );
+    }
+}
+
+if ( ! function_exists( 'sfc_options_persist_diagnose' ) ) {
+    /**
+     * Human-readable reason the options store cannot be written.
+     *
+     * @param string $file Absolute path to options.json.
+     * @param string $dir  Absolute path to data/config/.
+     * @return string
+     */
+    function sfc_options_persist_diagnose( $file, $dir ) {
+        $php_user = '';
+        if ( function_exists( 'posix_geteuid' ) && function_exists( 'posix_getpwuid' ) ) {
+            $pw = posix_getpwuid( posix_geteuid() );
+            $php_user = ( is_array( $pw ) && ! empty( $pw['name'] ) ) ? $pw['name'] : '';
+        }
+
+        $owner_of = static function ( $path ) {
+            if ( ! function_exists( 'posix_getpwuid' ) || ! file_exists( $path ) ) {
+                return '';
+            }
+            $pw = @posix_getpwuid( (int) @fileowner( $path ) );
+            return ( is_array( $pw ) && ! empty( $pw['name'] ) ) ? $pw['name'] : '';
+        };
+
+        $mode_of = static function ( $path ) {
+            return file_exists( $path ) ? substr( sprintf( '%o', (int) @fileperms( $path ) ), -4 ) : '';
+        };
+
+        $parts = array();
+        if ( '' !== $php_user ) {
+            $parts[] = 'PHP corre como ' . $php_user . '.';
+        }
+
+        if ( is_file( $file ) ) {
+            $owner = $owner_of( $file );
+            $mode  = $mode_of( $file );
+            $parts[] = 'options.json es '
+                . ( '' !== $owner ? $owner . ' ' : '' )
+                . $mode
+                . ( is_writable( $file ) ? '.' : ' y el proceso no puede escribirlo.' );
+        } else {
+            $parts[] = 'options.json no existe.';
+        }
+
+        if ( is_dir( $dir ) ) {
+            $owner = $owner_of( $dir );
+            $mode  = $mode_of( $dir );
+            $parts[] = 'data/config/ es '
+                . ( '' !== $owner ? $owner . ' ' : '' )
+                . $mode
+                . ( is_writable( $dir ) ? '.' : ' y el proceso no puede crear el archivo temporal ahí.' );
+        } else {
+            $parts[] = 'Falta el directorio data/config/.';
+        }
+
+        $last = error_get_last();
+        if ( is_array( $last ) && ! empty( $last['message'] ) ) {
+            $parts[] = $last['message'];
+        }
+
+        return implode( ' ', $parts );
+    }
+}
+
 if ( ! function_exists( 'sfc_options_persist' ) ) {
     /**
      * Write the in-memory store to disk (atomic, pretty-printed).
      *
+     * Prefers temp-file + rename (needs a writable data/config/ directory).
+     * Falls back to writing options.json in place when the file itself is
+     * writable — file mode 644 is enough; the directory does not have to be.
+     *
      * @return bool
      */
     function sfc_options_persist() {
+        $GLOBALS['__sfc_options_persist_error'] = '';
         $file = sfc_options_store_file();
         $dir  = dirname( $file );
-        if ( ! is_dir( $dir ) && ! mkdir( $dir, 0775, true ) && ! is_dir( $dir ) ) {
+        if ( ! is_dir( $dir ) && ! @mkdir( $dir, 0775, true ) && ! is_dir( $dir ) ) {
+            $GLOBALS['__sfc_options_persist_error'] = sfc_options_persist_diagnose( $file, $dir );
             return false;
         }
+
         $json = json_encode(
             $GLOBALS['__sfc_options'] ?? array(),
             JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
-        $tmp = $file . '.' . getmypid() . '.tmp';
-        if ( false === file_put_contents( $tmp, $json . "\n", LOCK_EX ) ) {
+        if ( false === $json ) {
+            $GLOBALS['__sfc_options_persist_error'] = 'No se pudo codificar options.json: ' . json_last_error_msg();
             return false;
         }
-        return rename( $tmp, $file );
+        $payload = $json . "\n";
+
+        $tmp = $file . '.' . getmypid() . '.tmp';
+        if ( false !== @file_put_contents( $tmp, $payload, LOCK_EX ) && @rename( $tmp, $file ) ) {
+            return true;
+        }
+        if ( is_file( $tmp ) ) {
+            @unlink( $tmp );
+        }
+
+        if ( is_file( $file ) && is_writable( $file ) && false !== @file_put_contents( $file, $payload, LOCK_EX ) ) {
+            return true;
+        }
+        if ( is_file( $file ) && is_writable( $file ) && false !== @file_put_contents( $file, $payload ) ) {
+            return true;
+        }
+
+        $GLOBALS['__sfc_options_persist_error'] = sfc_options_persist_diagnose( $file, $dir );
+        return false;
     }
 }
 
