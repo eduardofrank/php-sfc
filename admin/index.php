@@ -74,7 +74,8 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
 
     <p class="adm-intro">
         Los precios están en USD. Los cambios se aplican de inmediato a la calculadora
-        y se guardan en <code>data/config/options.json</code> (versionado en git).
+        y se guardan en <code>data/config/options.json</code> en este servidor
+        (los despliegues no lo sobrescriben).
     </p>
 
     <nav class="adm-toc">

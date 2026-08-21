@@ -155,9 +155,14 @@ Pricing stays in USD (the source of truth); VES is a display conversion.
 All price-affecting values (price tables, lamination / die-cut / turnaround /
 job-service rates, sheet specs, imposition gap, quantity tiers, fulfillment) are
 read through `get_option()`, which is backed by a JSON store at
-**`data/config/options.json`** (tracked in git — price changes are versioned).
-Any key absent from the file falls back to the code default, so deleting the
-file restores defaults.
+**`data/config/options.json`**. Any key absent from the file falls back to the
+code default, so deleting the file restores defaults.
+
+**Prices are managed on the server, not in git.** The file is tracked so a fresh
+install has a full price table, but the deploy `rsync` **excludes** it (see
+[DEPLOY.md](DEPLOY.md)), so the live copy is authoritative and a deploy never
+overwrites what you set in `/admin`. Treat the committed copy as the seed;
+don't expect server price changes to appear in git.
 
 Two ways to edit:
 
@@ -173,14 +178,21 @@ Two ways to edit:
    `ABSPATH`-guarded PHP file, so it is never served as static text. (You can
    instead set `SFC_ADMIN_PASSWORD_HASH` in the web environment.)
 
-2. **Edit the file** — change `data/config/options.json` by hand. It is
-   re-validated on load. Regenerate it from the code defaults any time with:
+   On the server this needs `data/` owned by the PHP user, or saves fail and the
+   value reverts — `rsync` as root resets that on every deploy, so re-run
+   `chown -R apache:apache …/data` after deploying (DEPLOY.md step 2). `/admin`
+   shows a banner when it cannot write the store.
+
+2. **Edit the file** — change `data/config/options.json` by hand, on the host
+   whose prices you mean to change. It is re-validated on load. Regenerate it
+   from the code defaults any time with:
 
    ```bash
    php public/bin/seed-config.php
    ```
 
-After either, commit `data/config/options.json` to version the change.
+Commit `data/config/options.json` only to move the **seed** defaults; day-to-day
+price changes live on the server and stay there.
 
 ## Development
 
