@@ -280,9 +280,6 @@ if ( ! function_exists( 'sfc_options_persist' ) ) {
         if ( is_file( $file ) && is_writable( $file ) && false !== @file_put_contents( $file, $payload, LOCK_EX ) ) {
             return true;
         }
-        if ( is_file( $file ) && is_writable( $file ) && false !== @file_put_contents( $file, $payload ) ) {
-            return true;
-        }
 
         $GLOBALS['__sfc_options_persist_error'] = sfc_options_persist_diagnose( $file, $dir );
         return false;
