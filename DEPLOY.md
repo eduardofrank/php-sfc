@@ -407,6 +407,29 @@ i.e. you manage pricing on the server. For that to work:
 To instead manage pricing **in git**, drop the `options.json` exclude and edit +
 commit the file in the repo; then don't change prices on the server.
 
+#### Capturing the live prices back into git
+
+Because the docroot has no `.git` and the update sync skips the file, **git never
+learns the prices you set in /admin**. The committed copy stays frozen at the
+last commit and drifts from the live one. That copy still matters: it is what a
+**fresh install** gets (step 1 has no `options.json` exclude), and the update
+sync will *not* restore a live file that goes missing — the app would fall back
+to the code defaults.
+
+So after a round of price changes, push the live file back as the new seed:
+
+```bash
+cp /var/www/localhost/htdocs/php-sfc/data/config/options.json \
+   /var/tmp/php-sfc-build/data/config/options.json
+git -C /var/tmp/php-sfc-build diff --stat            # sanity-check before committing
+git -C /var/tmp/php-sfc-build commit -am 'Update seed prices from live'
+git -C /var/tmp/php-sfc-build push
+```
+
+Do this **from the build clone**, and pull before the next deploy as usual. It is
+a backup and a seed refresh, not a deploy: the live file is already the file the
+site is using.
+
 ## Base path
 
 The app derives its URL prefix from the request, so `/php-sfc/` works with no

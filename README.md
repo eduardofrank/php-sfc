@@ -192,7 +192,9 @@ Two ways to edit:
    ```
 
 Commit `data/config/options.json` only to move the **seed** defaults; day-to-day
-price changes live on the server and stay there.
+price changes live on the server and stay there. To fold the live prices back
+into git as the new seed, see "Capturing the live prices back into git" in
+[DEPLOY.md](DEPLOY.md).
 
 ## Development
 
