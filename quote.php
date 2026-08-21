@@ -50,7 +50,7 @@ require __DIR__ . '/src/partials/head.php';
 <?php if ( ! $quote ) : ?>
     <div class="sfc sfc--error app-notfound">
         <h1>Cotización no encontrada</h1>
-        <p>El enlace no corresponde a ninguna cotización. <a href="<?php echo $h( $b ); ?>/">Crear una nueva</a>.</p>
+        <p>El enlace no corresponde a ninguna cotización. <a href="<?php echo $h( $b ); ?>/">Crear una nueva</a> o ver las <a href="<?php echo $h( $b ); ?>/quotes.php">cotizaciones guardadas</a>.</p>
     </div>
 <?php else : ?>
     <?php $curr = $quote['currency']; ?>
