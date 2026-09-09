@@ -81,6 +81,21 @@ CREATE TABLE IF NOT EXISTS sfc_exchange_rates (
 );
 ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS ves_rate  NUMERIC(18,4);
 ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS total_ves NUMERIC(18,2);
+
+-- P2P USDT rate. Unlike the BCV rate (one row per business day) this is
+-- sampled hourly, so the table keeps the full history and readers take the
+-- newest row. Bolivar totals are USD * bcv_rate * (usdt_rate / bcv_rate).
+CREATE TABLE IF NOT EXISTS sfc_usdt_rates (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ves_per_usdt NUMERIC(18,4) NOT NULL,
+    source       TEXT,
+    fetched_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS sfc_usdt_rates_fetched ON sfc_usdt_rates (fetched_at DESC);
+
+-- Freeze the USDT leg alongside the BCV leg on each issued quote.
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS usdt_rate  NUMERIC(18,4);
+ALTER TABLE sfc_quotes ADD COLUMN IF NOT EXISTS ves_factor NUMERIC(12,6);
 SQL;
 
 try {

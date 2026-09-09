@@ -12,6 +12,6 @@
 # OS noise
 .DS_Store
 
-# Python cache (bin/fetch-bcv-rate.py)
+# Python cache (bin/*.py)
 __pycache__/
 *.pyc

@@ -23,6 +23,8 @@ $imposition_gap = sfc_get_sheet_imposition_gap_mm();
 $quantity_tiers = sfc_get_quantity_tiers();
 $fulfillment    = sfc_get_fulfillment_settings();
 $exchange       = sfc_current_rate_row();
+$usdt           = sfc_current_usdt_rate_row();
+$ves_factor     = sfc_current_ves_factor();
 
 /** Shorthand escapers. */
 $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); };
@@ -254,7 +256,18 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
 
     <!-- ================= EXCHANGE RATE ================= -->
     <section id="tasa" class="adm-section">
-        <h2>Tasa de cambio (BCV)</h2>
+        <h2>Tasas de cambio</h2>
+        <p class="adm-help">
+            Los montos en Bs. se calculan como <strong>USD × tasa BCV × factor</strong>,
+            donde el factor es <strong>USDT ÷ BCV</strong>. Si falta cualquiera de las dos
+            tasas no se muestran bolívares, para no publicar un precio muy por debajo del real.
+            <?php if ( null !== $ves_factor ) : ?>
+                Factor vigente: <strong><?php echo $h( sfc_format_factor( $ves_factor ) ); ?></strong>
+                (Bs. <?php echo $h( number_format( (float) $exchange['ves_per_usd'] * $ves_factor, 2, ',', '.' ) ); ?> por USD facturado).
+            <?php endif; ?>
+        </p>
+
+        <h3>Tasa oficial (BCV)</h3>
         <div class="adm-card">
             <?php if ( $exchange ) : ?>
                 <p class="adm-rate-current">
@@ -274,6 +287,29 @@ $fields = static function ( $action ) use ( $csrf, $h ) {
                 </label>
                 <p class="adm-help">Se actualiza automáticamente cada mañana; use esto como respaldo o para corregir la tasa del día.</p>
                 <button type="submit" class="adm-btn">Guardar tasa</button>
+            </form>
+        </div>
+
+        <h3>Tasa P2P (USDT)</h3>
+        <div class="adm-card">
+            <?php if ( $usdt ) : ?>
+                <p class="adm-rate-current">
+                    Última: <strong><?php echo $h( sfc_format_rate( (float) $usdt['ves_per_usdt'] ) ); ?> / USDT</strong>
+                    <span class="adm-help">· <?php echo $h( substr( (string) $usdt['fetched_at'], 0, 16 ) ); ?> · <?php echo $h( $usdt['source'] ?? '—' ); ?></span>
+                </p>
+            <?php else : ?>
+                <p class="adm-help">Aún no hay tasa USDT registrada. Los montos en Bs. no se mostrarán hasta que se ingrese una (o corra el script cada hora).</p>
+            <?php endif; ?>
+            <form method="post">
+                <?php $fields( 'save_usdt_rate' ); ?>
+                <label class="adm-row">
+                    <span>Bs. por 1 USDT</span>
+                    <input type="text" inputmode="decimal" name="ves_per_usdt"
+                        value="<?php echo $usdt ? $h( number_format( (float) $usdt['ves_per_usdt'], 2, '.', '' ) ) : ''; ?>"
+                        placeholder="p. ej. 965.00">
+                </label>
+                <p class="adm-help">Se actualiza automáticamente cada hora desde usdt.com.ve (el mayor valor USDT publicado); use esto como respaldo. Cada envío agrega una muestra nueva, no reemplaza la anterior.</p>
+                <button type="submit" class="adm-btn">Guardar tasa USDT</button>
             </form>
         </div>
     </section>

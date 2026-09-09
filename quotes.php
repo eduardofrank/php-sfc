@@ -24,8 +24,14 @@ if ( 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) {
         try {
             $upd   = sfc_quotes_update_rate( (int) ( $_POST['id'] ?? 0 ) );
             $flash = $upd
-                ? array( 'ok' => true, 'message' => 'Cotización ' . $upd['quoteNumber'] . ' actualizada a ' . sfc_format_rate( $upd['vesRate'] ) . ' / USD.' )
-                : array( 'ok' => false, 'message' => 'No hay tasa de cambio disponible para actualizar.' );
+                ? array(
+                    'ok'      => true,
+                    'message' => 'Cotización ' . $upd['quoteNumber'] . ' actualizada a '
+                        . sfc_format_rate( $upd['vesRate'] ) . ' / USD (BCV) · '
+                        . sfc_format_rate( $upd['usdtRate'] ) . ' / USDT · factor '
+                        . sfc_format_factor( $upd['factor'] ) . '.',
+                )
+                : array( 'ok' => false, 'message' => 'No hay tasa BCV y USDT disponibles para actualizar.' );
         } catch ( Throwable $e ) {
             $flash = array( 'ok' => false, 'message' => 'No se pudo actualizar la tasa.' );
         }

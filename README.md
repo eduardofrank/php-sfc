@@ -136,19 +136,36 @@ finalize** (`YYYY-NNNN`, per-year number), so the document is a fixed, dated quo
 
 ## Dual currency (USD + VES)
 
-Every subtotal is shown in **bolívares** next to USD, using the daily **BCV** rate.
-Pricing stays in USD (the source of truth); VES is a display conversion.
+Every subtotal is shown in **bolívares** next to USD. Pricing stays in USD (the
+source of truth); VES is a display conversion driven by **two** rates:
 
-- The rate lives in `sfc_exchange_rates` (one row/day), fetched each morning by
-  `bin/fetch-bcv-rate.py` (cron, BCV scrape + JSON-API fallback) or set manually in
-  `/admin → Tasa de cambio`. `src/exchange-rates.php` reads the latest rate and
+    Bs. = USD × tasa BCV × factor,   where factor = tasa USDT ÷ tasa BCV
+
+The factor runs roughly 1.15–1.5 and reflects the gap between the official rate
+and the P2P market. Carried at full precision this is arithmetically `USD ×
+tasa USDT`; the legs are kept apart so a quote can show how its total was reached.
+
+- **BCV** (official) lives in `sfc_exchange_rates`, one row per day, fetched each
+  morning by `bin/fetch-bcv-rate.py` (BCV scrape + JSON-API fallback) or set in
+  `/admin → Tasas de cambio`.
+- **USDT** (P2P) lives in `sfc_usdt_rates`, a time series sampled **hourly** by
+  `bin/fetch-usdt-rate.py`, which takes the highest USDT price published on
+  usdt.com.ve (the BCV reference row in that same table is excluded). Readers take
+  the newest row. It is hourly rather than daily because P2P rates move through the
+  day. A manual entry from `/admin` adds a sample rather than replacing one.
+- `src/exchange-rates.php` exposes both legs plus `sfc_ves_factor()` and
+  `sfc_effective_ves_rate()` — the single value callers multiply USD by — and
   formats Bs. (es-VE, `Bs. 3.481,63`).
-- A finalized quote **freezes** its issue-time rate (`sfc_quotes.ves_rate`/
-  `total_ves`), so a sent quote's Bs. total is fixed — mirroring the frozen USD
-  prices. Staff can **re-stamp a quote to the current rate in place** (same number,
-  same USD) from the `quotes.php` browser via `sfc_quotes_update_rate()`. The shared
-  `quote.php` document stays read-only for clients.
-- No rate yet → the app shows USD only (VES hidden), never an error.
+- A finalized quote **freezes** both legs and the factor (`sfc_quotes.ves_rate`,
+  `usdt_rate`, `ves_factor`, `total_ves`), so a sent quote's Bs. total is fixed —
+  mirroring the frozen USD prices. Its footer prints all three. Staff can
+  **re-stamp a quote to current rates in place** (same number, same USD) from the
+  `quotes.php` browser via `sfc_quotes_update_rate()`. The shared `quote.php`
+  document stays read-only for clients.
+- **Either leg missing → Bs. is hidden entirely**, never an error and never an
+  official-rate figure roughly 20 % under the intended price. Quotes issued before
+  the USDT factor existed have no `ves_factor` and keep displaying exactly as
+  issued, at the BCV rate alone.
 
 ## Maintaining prices
 

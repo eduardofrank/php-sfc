@@ -91,9 +91,14 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
     $total = round( $total, 2 );
     $curr  = (string) ( $items[0]['currency'] ?? 'USD' );
 
-    // Freeze the issue-time VES rate (null when no rate is available yet).
-    $ves_rate  = sfc_current_usd_ves_rate();
-    $total_ves = null !== $ves_rate ? round( $total * $ves_rate, 2 ) : null;
+    // Freeze the issue-time rate legs. Bolivares are USD * bcv * factor; all
+    // three are null together when either leg is missing, so a quote never
+    // publishes an official-rate figure well under the intended price.
+    $ves_rate   = sfc_current_usd_ves_rate();
+    $usdt_rate  = sfc_current_usdt_rate();
+    $ves_factor = sfc_ves_factor( $ves_rate, $usdt_rate );
+    $effective  = sfc_effective_ves_rate();
+    $total_ves  = null !== $effective ? round( $total * $effective, 2 ) : null;
 
     $pdo->beginTransaction();
     try {
@@ -101,9 +106,11 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
 
         $head = $pdo->prepare(
             'INSERT INTO sfc_quotes
-                (quote_number, share_token, client_id, total_price, currency, title, notes, ves_rate, total_ves)
+                (quote_number, share_token, client_id, total_price, currency, title, notes,
+                 ves_rate, usdt_rate, ves_factor, total_ves)
              VALUES
-                (:number, :token, :client, :total, :currency, :title, :notes, :ves_rate, :total_ves)
+                (:number, :token, :client, :total, :currency, :title, :notes,
+                 :ves_rate, :usdt_rate, :ves_factor, :total_ves)
              RETURNING id'
         );
         $head->execute(
@@ -115,8 +122,10 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
                 ':currency'  => $curr,
                 ':title'     => '' === $title ? null : $title,
                 ':notes'     => '' === $notes ? null : $notes,
-                ':ves_rate'  => null !== $ves_rate ? number_format( $ves_rate, 4, '.', '' ) : null,
-                ':total_ves' => null !== $total_ves ? number_format( $total_ves, 2, '.', '' ) : null,
+                ':ves_rate'   => null !== $ves_rate ? number_format( $ves_rate, 4, '.', '' ) : null,
+                ':usdt_rate'  => null !== $usdt_rate ? number_format( $usdt_rate, 4, '.', '' ) : null,
+                ':ves_factor' => null !== $ves_factor ? number_format( $ves_factor, 6, '.', '' ) : null,
+                ':total_ves'  => null !== $total_ves ? number_format( $total_ves, 2, '.', '' ) : null,
             )
         );
         $quote_id = (int) $head->fetchColumn();
@@ -157,32 +166,42 @@ function sfc_quotes_create_from_draft( $client_id, $items, $title = '', $notes =
 }
 
 /**
- * Re-stamp a finalized quote to a new VES rate in place — same quote number and
- * USD prices, only ves_rate / total_ves recomputed. Defaults to the current rate.
+ * Re-stamp a finalized quote to current rates in place — same quote number and
+ * USD prices, only the VES legs recomputed. Defaults to the current BCV and
+ * USDT rates; pass either to override.
  *
  * @param int        $quote_id Quote id.
- * @param float|null $rate     Bs. per USD; null uses sfc_current_usd_ves_rate().
- * @return array{quoteNumber:string,vesRate:float,totalVes:float}|null Null if no rate.
+ * @param float|null $rate     Bs. per USD (BCV); null uses the stored current rate.
+ * @param float|null $usdt     Bs. per USDT; null uses the stored current rate.
+ * @return array{quoteNumber:string,vesRate:float,usdtRate:float,factor:float,totalVes:float}|null
+ *         Null when either leg is unavailable or the quote does not exist.
  */
-function sfc_quotes_update_rate( $quote_id, $rate = null ) {
-    $rate = null !== $rate ? (float) $rate : sfc_current_usd_ves_rate();
-    if ( null === $rate || $rate <= 0 ) {
+function sfc_quotes_update_rate( $quote_id, $rate = null, $usdt = null ) {
+    $rate   = null !== $rate ? (float) $rate : sfc_current_usd_ves_rate();
+    $usdt   = null !== $usdt ? (float) $usdt : sfc_current_usdt_rate();
+    $factor = sfc_ves_factor( $rate, $usdt );
+    if ( null === $factor ) {
         return null;
     }
+    $effective = round( (float) $rate * $factor, 4 );
 
     $pdo  = sfc_db();
     $stmt = $pdo->prepare(
         'UPDATE sfc_quotes
             SET ves_rate = :rate,
-                total_ves = round(total_price * :rate2, 2)
+                usdt_rate = :usdt,
+                ves_factor = :factor,
+                total_ves = round(total_price * :effective, 2)
           WHERE id = :id
-        RETURNING quote_number, ves_rate, total_ves'
+        RETURNING quote_number, ves_rate, usdt_rate, ves_factor, total_ves'
     );
     $stmt->execute(
         array(
-            ':rate'  => number_format( $rate, 4, '.', '' ),
-            ':rate2' => number_format( $rate, 4, '.', '' ),
-            ':id'    => (int) $quote_id,
+            ':rate'      => number_format( $rate, 4, '.', '' ),
+            ':usdt'      => number_format( $usdt, 4, '.', '' ),
+            ':factor'    => number_format( $factor, 6, '.', '' ),
+            ':effective' => number_format( $effective, 4, '.', '' ),
+            ':id'        => (int) $quote_id,
         )
     );
     $row = $stmt->fetch();
@@ -193,6 +212,8 @@ function sfc_quotes_update_rate( $quote_id, $rate = null ) {
     return array(
         'quoteNumber' => $row['quote_number'],
         'vesRate'     => (float) $row['ves_rate'],
+        'usdtRate'    => (float) $row['usdt_rate'],
+        'factor'      => (float) $row['ves_factor'],
         'totalVes'    => (float) $row['total_ves'],
     );
 }
@@ -275,7 +296,8 @@ function sfc_quotes_list( $filters = array(), $limit = 25, $offset = 0 ) {
     list( $where, $params ) = sfc_quotes_filter_sql( $filters );
 
     $sql = 'SELECT q.id, q.quote_number, q.share_token, q.title, q.total_price,
-                   q.currency, q.status, q.created_at, q.ves_rate, q.total_ves,
+                   q.currency, q.status, q.created_at, q.ves_rate, q.usdt_rate,
+                   q.ves_factor, q.total_ves,
                    c.name AS client_name,
                    (SELECT COUNT(*) FROM sfc_quote_items i WHERE i.quote_id = q.id) AS item_count
             FROM sfc_quotes q JOIN sfc_clients c ON c.id = q.client_id'

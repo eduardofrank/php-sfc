@@ -22,11 +22,19 @@ $money = static function ( $amount, $currency ) {
     return $currency . ' $' . number_format( (float) $amount, 2 );
 };
 
-// Frozen VES rate on this quote (0 when the quote predates dual-currency).
-$ves_rate = $quote && isset( $quote['ves_rate'] ) ? (float) $quote['ves_rate'] : 0.0;
-$has_ves  = $ves_rate > 0;
-$ves = static function ( $usd ) use ( $ves_rate, $h ) {
-    return $h( sfc_format_ves( (float) $usd, $ves_rate > 0 ? $ves_rate : null ) );
+// Frozen VES legs on this quote (0 when it predates dual-currency). Quotes
+// issued before the USDT factor have no factor stored: they were priced at the
+// BCV rate alone and keep displaying exactly as issued.
+$ves_rate   = $quote && isset( $quote['ves_rate'] ) ? (float) $quote['ves_rate'] : 0.0;
+$usdt_rate  = $quote && isset( $quote['usdt_rate'] ) ? (float) $quote['usdt_rate'] : 0.0;
+$ves_factor = $quote && ! empty( $quote['ves_factor'] ) ? (float) $quote['ves_factor'] : 1.0;
+// Multiply by the stored USDT rate, not by bcv * factor: the factor is stored
+// rounded, so recomputing it drifts a few cents away from the total_ves the
+// quotes list prints. The factor is shown for transparency, not used as input.
+$eff_rate   = $usdt_rate > 0 ? $usdt_rate : $ves_rate;
+$has_ves    = $eff_rate > 0;
+$ves = static function ( $usd ) use ( $eff_rate, $h ) {
+    return $h( sfc_format_ves( (float) $usd, $eff_rate > 0 ? $eff_rate : null ) );
 };
 
 $page_title  = $quote ? ( 'Cotización ' . $quote['quote_number'] ) : 'Cotización';
@@ -111,7 +119,7 @@ require __DIR__ . '/src/partials/head.php';
             </div>
         <?php endif; ?>
 
-        <p class="quote-doc__foot">Cotización emitida el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?> · Precios fijos en <?php echo $h( $curr ); ?><?php if ( $has_ves ) : ?> · Tasa BCV: <?php echo $h( sfc_format_rate( $ves_rate ) ); ?> / USD<?php endif; ?>.</p>
+        <p class="quote-doc__foot">Cotización emitida el <?php echo $h( substr( (string) $quote['created_at'], 0, 10 ) ); ?> · Precios fijos en <?php echo $h( $curr ); ?><?php if ( $has_ves ) : ?> · Tasa BCV: <?php echo $h( sfc_format_rate( $ves_rate ) ); ?> / USD<?php if ( $usdt_rate > 0 ) : ?> · USDT: <?php echo $h( sfc_format_rate( $usdt_rate ) ); ?> / USDT · Factor: <?php echo $h( sfc_format_factor( $ves_factor ) ); ?><?php endif; ?><?php endif; ?>.</p>
     </article>
 <?php endif; ?>
 </main>

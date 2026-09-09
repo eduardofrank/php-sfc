@@ -97,7 +97,7 @@ Create the schema (idempotent — safe to re-run on every deploy):
 
 ```bash
 cd /var/www/localhost/htdocs/php-sfc
-php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_exchange_rates, sfc_quote_counters, sfc_quote_items, sfc_quotes"
+php bin/db-migrate.php        # -> "Tables: sfc_clients, sfc_exchange_rates, sfc_quote_counters, sfc_quote_items, sfc_quotes, sfc_usdt_rates"
 ```
 
 ## 5. Make sure `.htaccess` overrides are allowed
@@ -124,11 +124,21 @@ off). If the whole site returns **500** right after deploy, the host allows only
 per-directory `data/.htaccess`, `src/.htaccess`, `bin/.htaccess` deny files use
 only `Require`, which is the most widely allowed).
 
-## 6. Daily BCV exchange rate (VES) — cron
+## 6. Exchange rates (VES) — cron
 
-Quotes show the bolívar amount alongside USD, using the daily **BCV** rate stored in
-`sfc_exchange_rates`. A Python script fetches it each morning; PHP reads the latest row.
-(Without a rate, the app simply shows USD only — nothing breaks.)
+Quotes show the bolívar amount alongside USD, computed as **USD × tasa BCV × factor**,
+where the factor is **tasa USDT ÷ tasa BCV**. That needs two fetchers:
+
+| Rate | Table | Script | Cadence |
+|---|---|---|---|
+| BCV (official) | `sfc_exchange_rates` (one row/day) | `bin/fetch-bcv-rate.py` | daily, before business hours |
+| USDT (P2P) | `sfc_usdt_rates` (time series) | `bin/fetch-usdt-rate.py` | hourly |
+
+If **either** rate is missing the app shows USD only — nothing breaks, but no bolívares
+appear until both are present. Both scripts exit non-zero on failure and leave the
+previous value in place.
+
+### 6a. Daily BCV rate
 
 ```bash
 # one-time: install the fetcher's deps (use your distro's python)
@@ -150,13 +160,43 @@ cron does not inherit Apache's:
 
 The script tries the BCV site first, falls back to a maintained JSON API, and exits non-zero on
 failure (leaving the previous day's rate in place). If a morning run fails, set the rate manually in
-**/admin → Tasa de cambio**. Staff can also re-stamp a saved quote to the current rate from
+**/admin → Tasas de cambio**. Staff can also re-stamp a saved quote to current rates from
 `/admin/quotes.php` ("Actualizar tasa") without rebuilding it.
 
 > **On unreliable power, use the systemd timer in §7 instead of cron.** A plain cron
 > job never runs if the machine was off at its scheduled time, so a morning outage
-> would leave the rate stale all day. The timer catches up missed runs and refreshes
-> shortly after every boot.
+> would leave the daily BCV rate stale all day. The timer catches up missed runs and
+> refreshes shortly after every boot. The hourly USDT job in §6b needs no equivalent:
+> a missed run self-corrects at the top of the next hour.
+
+### 6b. Hourly USDT rate
+
+The P2P rate moves through the day, so it is sampled hourly. `bin/fetch-usdt-rate.py`
+scrapes usdt.com.ve and stores the **highest** USDT price published there; the BCV
+reference row on that page is excluded so it can never drag the maximum down. Each run
+appends a row — the table is a history, and readers take the newest.
+
+```bash
+# same deps as the BCV fetcher; test it once:
+SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' \
+  python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py
+# -> "fetch-usdt-rate: 2026-09-09 17:47 = Bs. 965.5000/USDT (usdt.com.ve/Binance P2P)"
+```
+
+```cron
+# every hour, on the hour
+0 * * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /usr/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py >> /var/log/sfc-usdt.log 2>&1
+```
+
+If the site's layout changes the script fails loudly rather than guessing — a wrong-but-
+plausible rate would silently misprice every quote. On failure set the rate manually in
+**/admin → Tasas de cambio → Tasa P2P (USDT)**; the newest sample wins.
+
+Prune the history occasionally if you like (it is small — 24 rows/day):
+
+```sql
+DELETE FROM sfc_usdt_rates WHERE fetched_at < now() - interval '1 year';
+```
 
 ## 7. Power-loss resilience (auto-recovery after reboot)
 

@@ -57,6 +57,9 @@ function sfc_admin_handle_post() {
             return sfc_admin_save_fulfillment();
         case 'save_exchange_rate':
             return sfc_admin_save_exchange_rate();
+
+        case 'save_usdt_rate':
+            return sfc_admin_save_usdt_rate();
         case 'reset_defaults':
             return sfc_admin_reset_defaults();
     }
@@ -78,6 +81,29 @@ function sfc_admin_save_exchange_rate() {
     return sfc_set_manual_rate( $rate, 'manual' )
         ? array( 'ok' => true, 'message' => 'Tasa de cambio actualizada: ' . sfc_format_rate( $rate ) . ' / USD.' )
         : array( 'ok' => false, 'message' => sfc_admin_write_error() );
+}
+
+/**
+ * Append a USDT rate sample manually (fallback / override for the hourly fetch).
+ *
+ * @return array{ok:bool,message:string}
+ */
+function sfc_admin_save_usdt_rate() {
+    $raw  = str_replace( ',', '.', trim( (string) ( $_POST['ves_per_usdt'] ?? '' ) ) );
+    $rate = (float) $raw;
+    if ( $rate <= 0 ) {
+        return array( 'ok' => false, 'message' => 'Ingrese una tasa mayor que cero.' );
+    }
+    if ( ! sfc_set_manual_usdt_rate( $rate, 'manual' ) ) {
+        return array( 'ok' => false, 'message' => 'No se pudo guardar la tasa USDT.' );
+    }
+
+    $factor = sfc_current_ves_factor();
+    $note   = null !== $factor ? ' Factor: ' . sfc_format_factor( $factor ) . '.' : '';
+    return array(
+        'ok'      => true,
+        'message' => 'Tasa USDT actualizada: ' . sfc_format_rate( $rate ) . ' / USDT.' . $note,
+    );
 }
 
 /**

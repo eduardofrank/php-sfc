@@ -60,7 +60,7 @@ $h = static function ( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 
 $money = static function ( $amount ) use ( $draft, $h ) {
     return $h( $draft['currency'] . ' $' . number_format( (float) $amount, 2 ) );
 };
-$ves_rate = sfc_current_usd_ves_rate();
+$ves_rate = sfc_effective_ves_rate();   // BCV * USDT factor; null hides Bs.
 $ves = static function ( $amount ) use ( $ves_rate, $h ) {
     return $h( sfc_format_ves( (float) $amount, $ves_rate ) );
 };
