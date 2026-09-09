@@ -12,7 +12,9 @@ share link resolves correctly either way. See "Base path" at the end if you need
 to override it.
 
 These instructions use the real target: the code in
-`/var/www/localhost/htdocs/php-sfc`, served at `http://your-host/php-sfc/`.
+`/var/www/localhost/htdocs/php-sfc`, served at `http://your-host/php-sfc/`. The
+reference server runs **Gentoo with systemd**; §6 and §7 assume `systemctl` and a
+Python virtualenv, so adapt those two if you deploy elsewhere.
 
 ---
 
@@ -138,15 +140,46 @@ If **either** rate is missing the app shows USD only — nothing breaks, but no 
 appear until both are present. Both scripts exit non-zero on failure and leave the
 previous value in place.
 
-### 6a. Daily BCV rate
+### 6a. Python environment (do this first)
+
+Both fetchers need `requests`, `beautifulsoup4` and `psycopg2`. Install them into a
+dedicated virtualenv rather than system-wide — current distros mark the system Python
+as externally managed (PEP 668) and a stray `pip install` there can fight the package
+manager:
 
 ```bash
-# one-time: install the fetcher's deps (use your distro's python)
-pip install requests beautifulsoup4 psycopg2-binary
+python3 -m venv /opt/sfc-venv
+/opt/sfc-venv/bin/pip install requests beautifulsoup4 psycopg2-binary
+/opt/sfc-venv/bin/python3 -c 'import requests, bs4, psycopg2, urllib3; print("deps OK")'
+```
 
-# test it once (DB creds via env, same names PHP uses):
+**Everything below — both cron entries and the systemd unit in §7b — must invoke
+`/opt/sfc-venv/bin/python3`, never `/usr/bin/python3`.** The system interpreter does
+not have these packages.
+
+> **Upgrading the system Python breaks this venv, and the failure is quiet.** A venv
+> is bound to the minor version that created it, so a distro upgrade (e.g. 3.13 → 3.14)
+> leaves it pointing at an interpreter that is gone. The fetches then stop while the
+> app happily keeps showing the **last stored rate** — no error page, no visibly broken
+> quote, just prices drifting further from reality every day. This exact failure went
+> unnoticed for four weeks on the reference server. After any Python upgrade:
+>
+> ```bash
+> /opt/sfc-venv/bin/python3 -c 'import requests, bs4, psycopg2' || {
+>   python3 -m venv --clear /opt/sfc-venv
+>   /opt/sfc-venv/bin/pip install requests beautifulsoup4 psycopg2-binary
+> }
+> ```
+>
+> Better, monitor the data rather than the interpreter — see "Rate staleness check"
+> at the end of §6.
+
+### 6b. Daily BCV rate
+
+```bash
+# test it once (deps from §6a; DB creds via env, same names PHP uses):
 SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' \
-  python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py
+  /opt/sfc-venv/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py
 # -> "fetch-bcv-rate: 2026-08-05 = Bs. 40.2500/USD (bcv-scrape)"
 ```
 
@@ -155,7 +188,7 @@ cron does not inherit Apache's:
 
 ```cron
 # min hour dom mon dow  (server clock; adjust to hit ~07:00 Caracas)
-0 7 * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /usr/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py >> /var/log/sfc-bcv.log 2>&1
+0 7 * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /opt/sfc-venv/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-bcv-rate.py >> /var/log/sfc-bcv.log 2>&1
 ```
 
 The script tries the BCV site first, falls back to a maintained JSON API, and exits non-zero on
@@ -166,10 +199,10 @@ failure (leaving the previous day's rate in place). If a morning run fails, set 
 > **On unreliable power, use the systemd timer in §7 instead of cron.** A plain cron
 > job never runs if the machine was off at its scheduled time, so a morning outage
 > would leave the daily BCV rate stale all day. The timer catches up missed runs and
-> refreshes shortly after every boot. The hourly USDT job in §6b needs no equivalent:
+> refreshes shortly after every boot. The hourly USDT job in §6c needs no equivalent:
 > a missed run self-corrects at the top of the next hour.
 
-### 6b. Hourly USDT rate
+### 6c. Hourly USDT rate
 
 The P2P rate moves through the day, so it is sampled hourly. `bin/fetch-usdt-rate.py`
 scrapes usdt.com.ve and stores the **highest** USDT price published there; the BCV
@@ -179,13 +212,13 @@ appends a row — the table is a history, and readers take the newest.
 ```bash
 # same deps as the BCV fetcher; test it once:
 SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' \
-  python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py
+  /opt/sfc-venv/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py
 # -> "fetch-usdt-rate: 2026-09-09 17:47 = Bs. 965.5000/USDT (usdt.com.ve/Binance P2P)"
 ```
 
 ```cron
 # every hour, on the hour
-0 * * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /usr/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py >> /var/log/sfc-usdt.log 2>&1
+0 * * * *  SFC_DB_HOST=127.0.0.1 SFC_DB_NAME=sheetfedcalc SFC_DB_USER=sheetfedcalc SFC_DB_PASS='...' /opt/sfc-venv/bin/python3 /var/www/localhost/htdocs/php-sfc/bin/fetch-usdt-rate.py >> /var/log/sfc-usdt.log 2>&1
 ```
 
 If the site's layout changes the script fails loudly rather than guessing — a wrong-but-
@@ -196,6 +229,27 @@ Prune the history occasionally if you like (it is small — 24 rows/day):
 
 ```sql
 DELETE FROM sfc_usdt_rates WHERE fetched_at < now() - interval '1 year';
+```
+
+### Rate staleness check
+
+Both fetchers fail loudly, but nothing *reads* their exit code once cron has moved
+on, and the app keeps serving the last stored rate indefinitely. Watch the data
+instead — this prints a line only when something is actually stale, so it is safe to
+run from cron and mail on output:
+
+```bash
+psql -U sheetfedcalc -h 127.0.0.1 -d sheetfedcalc -tA -c "
+SELECT 'BCV rate is '  || (current_date - max(rate_date)) || ' day(s) old'
+  FROM sfc_exchange_rates HAVING max(rate_date) < current_date - 1
+UNION ALL
+SELECT 'USDT rate is ' || round(extract(epoch FROM now() - max(fetched_at))/3600) || ' hour(s) old'
+  FROM sfc_usdt_rates HAVING max(fetched_at) < now() - interval '6 hours';"
+```
+
+```cron
+# 08:30 daily — mails you only if a rate has gone stale
+30 8 * * *  psql -U sheetfedcalc -h 127.0.0.1 -d sheetfedcalc -tA -c "SELECT 'BCV rate is ' || (current_date - max(rate_date)) || ' day(s) old' FROM sfc_exchange_rates HAVING max(rate_date) < current_date - 1 UNION ALL SELECT 'USDT rate is ' || round(extract(epoch FROM now() - max(fetched_at))/3600) || ' hour(s) old' FROM sfc_usdt_rates HAVING max(fetched_at) < now() - interval '6 hours';"
 ```
 
 ## 7. Power-loss resilience (auto-recovery after reboot)
@@ -248,11 +302,25 @@ never an error.
 > sudo systemctl reset-failed postgresql-17.service
 > ```
 >
-> Keep **only** the cluster that holds `sheetfedcalc` (the one your
-> `data/config/db.php` targets) enabled. `systemctl --failed` should be empty
-> afterward.
+> Keep **only** the cluster that holds `sheetfedcalc` (the one your §4 connection
+> settings target — `SetEnv SFC_DB_*` in the vhost, or `data/config/db.php` if you
+> chose that route) enabled. `systemctl --failed` should be empty afterward.
+>
+> A related trap even with one cluster: PHP and the Python fetchers are configured
+> **separately**, so they can end up on different ports. `SFC_DB_PORT` defaults to
+> 5432 in the fetchers; if PHP is pointed somewhere else, migrations land in one
+> database and rate rows in another. The symptom is a fetcher failing with
+> `relation "sfc_usdt_rates" does not exist` right after a successful migration:
+>
+> ```bash
+> for p in 5432 5433; do echo -n "port $p: "; psql -U sheetfedcalc -h 127.0.0.1 -p $p \
+>   -d sheetfedcalc -tAc "SELECT count(*) FROM pg_tables WHERE tablename='sfc_usdt_rates'" 2>&1 | tail -1; done
+> ```
 
 ### 7b. Fetch the rate from a systemd timer (survives missed runs)
+
+(The unit below runs `/opt/sfc-venv/bin/python3` — the virtualenv from §6a. If you
+skipped that, create it before enabling the timer.)
 
 Replace the cron entry from §6. Remove the old line non-interactively (backs up the
 crontab automatically):
@@ -354,6 +422,59 @@ Saved-quote share links and the admin session cookie should travel over TLS. On
 a shared host this is usually managed for you; otherwise `certbot --apache`.
 
 ---
+
+## 9. Going live from trial (reset to an empty database)
+
+After a trial period the quotes, clients and numbering are usually throwaway. This
+resets them so the first real quote is numbered `YYYY-0001`, without touching prices,
+credentials or the schema.
+
+**Order matters:** deploy the code and migrate *first*, so the schema is current
+before you wipe.
+
+```bash
+# 0. Back up — this is the only way back.
+pg_dump -U sheetfedcalc -h 127.0.0.1 sheetfedcalc > ~/sfc-trial-backup-$(date +%F).sql
+
+# 1. Deploy the code (the "Updating a live install" rsync below, whose excludes
+#    protect prices, admin password and db.php), then:
+php /var/www/localhost/htdocs/php-sfc/bin/db-migrate.php
+
+# 2. Wipe quote data and restart numbering.
+psql -U sheetfedcalc -h 127.0.0.1 -d sheetfedcalc -v ON_ERROR_STOP=1 <<'SQL'
+TRUNCATE sfc_quote_items, sfc_quotes, sfc_clients, sfc_quote_counters
+  RESTART IDENTITY CASCADE;
+SQL
+
+# 3. Remove dead file-store leftovers (superseded by the database; nothing reads them).
+rm -f /var/www/localhost/htdocs/php-sfc/data/quotes/*.json
+```
+
+`sfc_quote_counters` is the one that matters for numbering — quote numbers come from
+that table, not from row ids, so clearing it is what restarts the sequence at `0001`.
+`RESTART IDENTITY` resets the id sequences too, so the database looks genuinely new.
+
+Leave `sfc_exchange_rates` and `sfc_usdt_rates` alone unless the trial rates are
+junk; wiping them means re-running both fetchers (§6) before any bolívar amount
+appears. Then reload PHP and verify:
+
+```bash
+systemctl restart apache2
+
+psql -U sheetfedcalc -h 127.0.0.1 -d sheetfedcalc -c "
+SELECT 'quotes' t, count(*) FROM sfc_quotes
+UNION ALL SELECT 'clients', count(*) FROM sfc_clients
+UNION ALL SELECT 'counters', count(*) FROM sfc_quote_counters;"
+```
+
+All three must be `0`. In the browser: `/quotes.php` is empty, the landing footer
+shows both rates and the factor, and your first saved quote comes out `YYYY-0001`.
+
+> **Prices are not part of this reset.** They live in `data/config/options.json` on
+> the server and both the update rsync and the TRUNCATE leave them untouched. But if
+> you ever re-clone onto a *fresh* server, the §1 first-install rsync has no
+> `options.json` exclude, so the git seed would overwrite your live prices — fold
+> them back into git first, per "Capturing the live prices back into git" below.
 
 ## Updating a live install
 
