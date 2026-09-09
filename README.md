@@ -166,6 +166,14 @@ tasa USDT`; the legs are kept apart so a quote can show how its total was reache
   official-rate figure roughly 20 % under the intended price. Quotes issued before
   the USDT factor existed have no `ves_factor` and keep displaying exactly as
   issued, at the BCV rate alone.
+- Both fetchers need `requests`, `beautifulsoup4` and `psycopg2`, and on the server
+  they run from the virtualenv at `/opt/sfc-venv/bin/python3` — **not** the system
+  interpreter. See [DEPLOY.md](DEPLOY.md) §6. Upgrading the system Python breaks
+  that venv, and the failure is quiet: the fetches stop while the app goes on
+  showing the last stored rate, so quotes keep pricing at a rate that is silently
+  going stale. Recreate it with `python3 -m venv --clear /opt/sfc-venv` and
+  reinstall, and consider alerting when the newest `sfc_usdt_rates` row is more
+  than a few hours old.
 
 ## Maintaining prices
 
