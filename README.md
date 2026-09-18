@@ -54,7 +54,7 @@ opens with a **Tipo de proyecto** radio: **Plano** or **Editorial**.
   - **Dimensiones**: 140×100, Media Carta, Carta, Tabloide, Tamaño Personalizado
     (with custom W/H)
   - **Cantidad** entry field
-  - **Peso del Papel**: Bond, 115/150/200/250/300 g, Lithosticker, Vinil
+  - **Peso del Papel**: Bond, 115/150/200/250/300 g, Sulfato 014, Lithosticker, Vinil
   - **Acabado del Papel** (Mate/Brillante) — shown *only* for the coated weights,
     hidden for Bond/Lithosticker/Vinil (reuses the existing surface-gating)
   - **Caras Impresas** — one/two sides, with **two-sided automatically removed for
@@ -91,7 +91,7 @@ items, totals); products are how you add items to it.
 | Path | Role |
 |------|------|
 | `index.php` | **Quote builder** (home) — the current draft, client + title/notes, Finalize |
-| `products.php` | Product picker — "add an item" (the ten-product grid) |
+| `products.php` | Product picker — "add an item" (the ten products plus Producto Avanzado, eleven tiles) |
 | `product.php` | Per-product calculator; primary action **Add to quote** (`?from=&item=` seeds a saved item) |
 | `quote.php` | Read-only, printable **quote document** (`?token=`) |
 | `quotes.php` | **Quote browser** — search all quotes + re-stamp rate (public in trusted deploys); delete needs admin login |
@@ -249,12 +249,13 @@ mandatory** — skipping it serves the old bytecode.
 
 Totals below use the shipped default rates, including the **cutting** job service
 (10% of print) that applies to flat products — so `Total` is above the base print.
+Die-cut stickers are the exception: they are billed die-cutting only, never cutting.
 
 | Product | Config | Total |
 |---------|--------|-------|
 | Business cards | 90×50, ×100, 4x0, matte laminate | $17.26 (print $14.55 + cut $1.46 + laminate $1.25) |
 | Posters | 450×310, ×5, 150 g | $14.85 (print $13.50 + cut $1.35) |
 | Letterhead | carta, ×100 | $142.45 (print $129.50 + cut $12.95) |
-| Album | 215.9×279.4, ×2, 20 pp | with $25/album binding |
-| Catalog | 215.9×139.7, ×10, 8 inner pp | $49.40 |
-| Die-cut stickers | Ø80, ×100, lithosticker | $25.52 (print $18.90 + die-cut $4.73 + cut $1.89) |
+| Album | 215.9×279.4, ×2, 20 pp, 150 g | $85.86 (print $32.60 + cut $3.26 + binding $50.00 at $25/album) |
+| Catalog | 215.9×139.7, ×10, 8 inner pp, bond inner, 300 g cover | $54.23 (print $47.15 + cut $4.72 + crease $2.36) |
+| Die-cut stickers | Ø80, ×100, lithosticker | $25.81 (print $20.65 + die-cut $5.16) |
