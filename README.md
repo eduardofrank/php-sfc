@@ -251,6 +251,17 @@ Totals below use the shipped default rates, including the **cutting** job servic
 (10% of print) that applies to flat products — so `Total` is above the base print.
 Die-cut stickers are the exception: they are billed die-cutting only, never cutting.
 
+Re-price the whole table against the engine with:
+
+```bash
+php bin/verify-quotes.php           # exits non-zero if any total has drifted
+php bin/verify-quotes.php --rows    # print the rows, to paste back in below
+```
+
+It reads prices through `get_option()` like everything else, so it verifies this
+table only against the **committed seed**. On the server it reports the live
+prices instead, which are expected to differ.
+
 | Product | Config | Total |
 |---------|--------|-------|
 | Business cards | 90×50, ×100, 4x0, matte laminate | $17.26 (print $14.55 + cut $1.46 + laminate $1.25) |
